@@ -1,0 +1,20 @@
+icons_launcher:
+  image_path: "assets/logos/logo_3.png"
+  platforms:
+    android:
+      enable: true
+      image_path: "assets/logos/logo_3.png"
+      adaptive_background_color: "#FFFFFF"
+      adaptive_foreground_image: "assets/logos/logo_3.png"
+    ios:
+      enable: true
+      image_path: "assets/logos/logo_3.png"
+    macos:
+      enable: true
+      image_path: "assets/logos/logo_3.png"
+    windows:
+      enable: true
+      image_path: "assets/logos/logo_4.png"
+    linux:
+      enable: true
+      image_path: "assets/logos/logo_3.png"

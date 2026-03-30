@@ -1,0 +1,35 @@
+name: cloodsy_s3_gui
+description: "Cloodsy S3 Admin GUI"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.5
+  http: ^1.6.0
+  flutter_secure_storage: ^10.0.0
+  path_provider: ^2.1.5
+  google_fonts: ^8.0.2
+  window_manager: ^0.5.1
+  lucide_icons_flutter: ^3.1.11
+
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  package_rename_plus: ^1.11.0
+
+  # Icon generation
+  icons_launcher: ^3.1.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logos/

@@ -1,0 +1,31 @@
+package_rename_config:
+  android:
+    app_name: Cloodsy S3
+    package_name: com.onaonbir.cloodsys3
+    lang: kotlin
+
+  ios:
+    app_name: Cloodsy S3
+    bundle_name: Cloodsy S3
+    package_name: com.onaonbir.cloodsys3
+
+  linux:
+    app_name: Cloodsy S3
+    package_name: com.onaonbir.cloodsys3
+    exe_name: cloodsy-s3
+
+  macos:
+    app_name: Cloodsy S3
+    package_name: com.onaonbir.cloodsys3
+    copyright_notice: Copyright © 2026 OnaOnbir. All rights reserved.
+
+  web:
+    app_name: Cloodsy S3
+    short_app_name: Cloodsy S3
+    description: Admin GUI for Cloodsy S3 Object Storage Server
+
+  windows:
+    app_name: Cloodsy S3
+    organization: OnaOnbir
+    copyright_notice: Copyright © 2026 OnaOnbir. All rights reserved.
+    exe_name: cloodsy-s3
