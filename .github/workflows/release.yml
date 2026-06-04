@@ -43,10 +43,13 @@ jobs:
       - name: Build MSIX installer (self-signed)
         shell: pwsh
         run: |
+          # Derive a valid 4-part numeric MSIX version from the ref, tolerating
+          # pre-release suffixes (v0.0.1-test) and non-tag refs (manual dispatch).
           $ver = "${{ github.ref_name }}".TrimStart('v')
-          $parts = $ver.Split('.')
-          while ($parts.Count -lt 3) { $parts += '0' }
-          $msixVer = "$($parts[0]).$($parts[1]).$($parts[2]).0"
+          $ver = ($ver -split '-')[0]
+          $nums = @($ver.Split('.') | Where-Object { $_ -match '^\d+$' })
+          while ($nums.Count -lt 3) { $nums += '0' }
+          $msixVer = "$($nums[0]).$($nums[1]).$($nums[2]).0"
           dart run msix:create --output-path . --output-name "cloodsy-s3-gui-${{ github.ref_name }}" --version $msixVer --store false
       - uses: softprops/action-gh-release@v2
         with:
@@ -91,7 +94,7 @@ jobs:
       - name: Install Linux build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libfuse2
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libfuse2 libsecret-1-dev libjsoncpp-dev
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ needs.prepare.outputs.flutter_version }}

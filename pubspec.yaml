@@ -42,6 +42,7 @@ flutter:
 msix_config:
   display_name: Cloodsy S3 GUI
   publisher_display_name: OnaOnbir
+  publisher: CN=OnaOnbir
   identity_name: com.onaonbir.cloodsys3gui
   msix_version: 1.0.0.0
   logo_path: assets/logos/logo_1.png
