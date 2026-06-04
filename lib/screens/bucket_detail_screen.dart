@@ -547,6 +547,77 @@ class _SettingsTab extends StatelessWidget {
               ),
             ),
           ),
+          Card(
+            child: ListTile(
+              leading: const Icon(LucideIcons.globe),
+              title: const Text('Public Read'),
+              subtitle: Text(bucket.publicRead
+                  ? 'Anonymous GET allowed'
+                  : 'Signed access only'),
+              trailing: Switch(
+                value: bucket.publicRead,
+                onChanged: (enabled) {
+                  bp.setPublicRead(bucketName, enabled);
+                },
+              ),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: const Icon(LucideIcons.hardDrive),
+              title: const Text('WebDAV Access'),
+              subtitle: Text(bucket.webdavEnabled
+                  ? 'Mountable via WebDAV'
+                  : 'WebDAV disabled'),
+              trailing: Switch(
+                value: bucket.webdavEnabled,
+                onChanged: (enabled) {
+                  bp.setWebdavEnabled(bucketName, enabled);
+                },
+              ),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: const Icon(LucideIcons.image),
+              title: const Text('Image Optimization'),
+              subtitle: const Text('Regenerate optimized variants'),
+              trailing: FilledButton(
+                onPressed: () async {
+                  final ok = await bp.reprocessImages(bucketName);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(ok
+                          ? 'Reprocessing started'
+                          : 'Reprocess failed'),
+                    ));
+                  }
+                },
+                child: const Text('Reprocess'),
+              ),
+            ),
+          ),
+          if (bucket.webdavEnabled && bp.webdavMountUrl != null)
+            Card(
+              child: ListTile(
+                leading: const Icon(LucideIcons.link),
+                title: const Text('WebDAV Mount'),
+                subtitle: Text(
+                    '${bp.webdavMountUrl}\nUser: access key  ·  Password: secret key'),
+                isThreeLine: true,
+                trailing: IconButton(
+                  icon: const Icon(LucideIcons.copy),
+                  tooltip: 'Copy mount URL',
+                  onPressed: () {
+                    Clipboard.setData(
+                        ClipboardData(text: bp.webdavMountUrl!));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Mount URL copied')),
+                    );
+                  },
+                ),
+              ),
+            ),
         ];
 
         if (wide) {

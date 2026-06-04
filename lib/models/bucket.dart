@@ -5,6 +5,8 @@ class Bucket {
   final String versioning;
   final String storageDir;
   final String? storagePath;
+  final bool publicRead;
+  final bool webdavEnabled;
   final int objects;
   final int usageBytes;
   final int credentials;
@@ -17,6 +19,8 @@ class Bucket {
     this.versioning = '',
     this.storageDir = '',
     this.storagePath,
+    this.publicRead = false,
+    this.webdavEnabled = false,
     this.objects = 0,
     this.usageBytes = 0,
     this.credentials = 0,
@@ -31,6 +35,8 @@ class Bucket {
       versioning: json['versioning'] as String? ?? '',
       storageDir: json['storage_dir'] as String? ?? '',
       storagePath: json['storage_path'] as String?,
+      publicRead: json['public_read'] as bool? ?? false,
+      webdavEnabled: json['webdav_enabled'] as bool? ?? false,
       objects: (json['objects'] as num?)?.toInt() ?? 0,
       usageBytes: (json['usage_bytes'] as num?)?.toInt() ?? 0,
       credentials: (json['credentials'] as num?)?.toInt() ?? 0,
@@ -40,6 +46,8 @@ class Bucket {
 
   String get versioningDisplay =>
       versioning.isEmpty ? 'Disabled' : versioning;
+
+  String get publicReadDisplay => publicRead ? 'Enabled' : 'Disabled';
 
   double get quotaUsagePercent {
     if (quotaBytes <= 0) return 0;

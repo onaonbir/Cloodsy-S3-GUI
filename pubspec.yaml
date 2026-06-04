@@ -29,7 +29,21 @@ dev_dependencies:
   # Icon generation
   icons_launcher: ^3.1.0
 
+  # Windows MSIX installer packaging (used by the release workflow)
+  msix: ^3.16.0
+
 flutter:
   uses-material-design: true
   assets:
     - assets/logos/
+
+# MSIX installer config (Windows). store: false self-signs a test certificate
+# for sideloading — users trust the bundled .cer once, then install the .msix.
+msix_config:
+  display_name: Cloodsy S3 GUI
+  publisher_display_name: OnaOnbir
+  identity_name: com.onaonbir.cloodsys3gui
+  msix_version: 1.0.0.0
+  logo_path: assets/logos/logo_1.png
+  capabilities: internetClient
+  store: false

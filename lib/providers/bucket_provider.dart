@@ -36,6 +36,22 @@ class BucketProvider extends ChangeNotifier {
   String? _latestVersion;
   String? get latestVersion => _latestVersion;
 
+  /// WebDAV mount base URL derived from the connected host + the server's
+  /// reported WebDAV port, or null when WebDAV is disabled/unknown.
+  String? get webdavMountUrl {
+    final st = _serverStatus;
+    if (st == null || !st.webdavEnabled || _api == null) return null;
+    try {
+      final host = Uri.parse(_api!.baseUrl).host;
+      final listen = st.webdavListen;
+      final port = listen.contains(':') ? listen.split(':').last : listen;
+      if (host.isEmpty || port.isEmpty) return null;
+      return 'http://$host:$port/';
+    } catch (_) {
+      return null;
+    }
+  }
+
   bool get updateAvailable {
     if (_serverStatus == null || _latestVersion == null) return false;
     if (_serverStatus!.version.isEmpty) return false;
@@ -184,6 +200,41 @@ class BucketProvider extends ChangeNotifier {
     try {
       await _api!.put('/buckets/$name/versioning', {'versioning': state});
       await fetchBucketDetail(name);
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> setPublicRead(String name, bool enabled) async {
+    try {
+      await _api!.put('/buckets/$name/public-read', {'public_read': enabled});
+      await fetchBucketDetail(name);
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> setWebdavEnabled(String name, bool enabled) async {
+    try {
+      await _api!.put('/buckets/$name/webdav', {'webdav_enabled': enabled});
+      await fetchBucketDetail(name);
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> reprocessImages(String name) async {
+    try {
+      await _api!.post('/buckets/$name/reprocess', {});
       return true;
     } on ApiException catch (e) {
       _error = e.message;

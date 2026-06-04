@@ -1,0 +1,133 @@
+name: Release
+
+# Build installable desktop binaries on every version tag and attach them to a
+# GitHub Release. Flutter desktop cannot cross-compile, so each OS is built on
+# its own runner. Builds are unsigned for now (see README for the SmartScreen /
+# Gatekeeper notes users need on first launch).
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch: # allow manual runs for testing
+
+permissions:
+  contents: write
+
+jobs:
+  # Read the pinned Flutter version from .fvmrc so CI matches local FVM exactly.
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      flutter_version: ${{ steps.meta.outputs.flutter_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: meta
+        run: echo "flutter_version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+
+  windows:
+    needs: prepare
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ needs.prepare.outputs.flutter_version }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build windows --release
+      - name: Package portable zip
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath cloodsy-s3-gui-windows-x64.zip
+      - name: Build MSIX installer (self-signed)
+        shell: pwsh
+        run: |
+          $ver = "${{ github.ref_name }}".TrimStart('v')
+          $parts = $ver.Split('.')
+          while ($parts.Count -lt 3) { $parts += '0' }
+          $msixVer = "$($parts[0]).$($parts[1]).$($parts[2]).0"
+          dart run msix:create --output-path . --output-name "cloodsy-s3-gui-${{ github.ref_name }}" --version $msixVer --store false
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            cloodsy-s3-gui-windows-x64.zip
+            cloodsy-s3-gui-*.msix
+
+  macos:
+    needs: prepare
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ needs.prepare.outputs.flutter_version }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build macos --release
+      - name: Package DMG
+        run: |
+          brew install create-dmg
+          APP=$(ls -d build/macos/Build/Products/Release/*.app | head -1)
+          test -n "$APP" || { echo "no .app produced"; exit 1; }
+          DMG="cloodsy-s3-gui-${{ github.ref_name }}-macos.dmg"
+          # create-dmg can exit non-zero even on success; fall back to checking the file.
+          create-dmg \
+            --volname "Cloodsy S3 GUI" \
+            --window-size 540 360 \
+            --icon-size 96 \
+            --app-drop-link 380 170 \
+            "$DMG" "$APP" || test -f "$DMG"
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: cloodsy-s3-gui-*-macos.dmg
+
+  linux:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libfuse2
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ needs.prepare.outputs.flutter_version }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build linux --release
+      - name: Package tar.gz
+        run: tar -czf cloodsy-s3-gui-linux-x64.tar.gz -C build/linux/x64/release/bundle .
+      - name: Build AppImage
+        run: |
+          set -e
+          APPDIR=AppDir
+          mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications"
+          cp -r build/linux/x64/release/bundle/* "$APPDIR/usr/bin/"
+          cp assets/logos/logo_1.png "$APPDIR/cloodsy-s3.png"
+          {
+            echo "[Desktop Entry]"
+            echo "Type=Application"
+            echo "Name=Cloodsy S3 GUI"
+            echo "Exec=cloodsy-s3"
+            echo "Icon=cloodsy-s3"
+            echo "Categories=Utility;"
+          } > "$APPDIR/cloodsy-s3.desktop"
+          cp "$APPDIR/cloodsy-s3.desktop" "$APPDIR/usr/share/applications/"
+          {
+            echo '#!/bin/bash'
+            echo 'HERE="$(dirname "$(readlink -f "${0}")")"'
+            echo 'exec "$HERE/usr/bin/cloodsy-s3" "$@"'
+          } > "$APPDIR/AppRun"
+          chmod +x "$APPDIR/AppRun"
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+          chmod +x appimagetool
+          ./appimagetool --appimage-extract-and-run "$APPDIR" "cloodsy-s3-gui-${{ github.ref_name }}-x86_64.AppImage"
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            cloodsy-s3-gui-linux-x64.tar.gz
+            cloodsy-s3-gui-*-x86_64.AppImage

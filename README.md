@@ -7,7 +7,7 @@
 Built with Flutter and Material Design 3. Connects to one or more Cloodsy S3 servers via the Admin REST API.
 
 [![Built by OnaOnbir](https://img.shields.io/badge/Built%20by-OnaOnbir-blue?style=flat-square)](https://onaonbir.com)
-[![Flutter](https://img.shields.io/badge/Flutter-3.11-02569B?style=flat-square&logo=flutter&logoColor=white)](https://flutter.dev)
+[![Flutter](https://img.shields.io/badge/Flutter-3.41-02569B?style=flat-square&logo=flutter&logoColor=white)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Mobile-green?style=flat-square)]()
 
 [Website](https://onaonbir.com) | [Cloodsy S3 Backend](https://github.com/onaonbir/Cloodsy-S3) | [Documentation](#getting-started)
@@ -26,6 +26,9 @@ Built with Flutter and Material Design 3. Connects to one or more Cloodsy S3 ser
 - **Webhook Notifications** — Configure event notification endpoints
 - **Admin User Management** — Create admins, reset passwords, auto-generate or custom passwords
 - **Versioning Control** — Enable/disable bucket versioning with a toggle
+- **Public-Read Toggle** — Flip anonymous object read access on/off per bucket
+- **WebDAV Access Toggle** — Make a bucket mountable as a network drive, with a copy-ready mount URL card
+- **Image Optimization** — Trigger background reprocessing to regenerate optimized image variants
 - **Custom Window Frame** — Native title bar with drag, minimize, maximize, close (desktop)
 - **Sidebar Navigation** — Server list, bucket tabs, settings section
 - **Dark Mode** — Light and dark themes with system detection
@@ -60,9 +63,31 @@ Built with Flutter and Material Design 3. Connects to one or more Cloodsy S3 ser
 └──────────┴───────────────────────────────────────────────┘
 ```
 
-## Requirements
+## Download
 
-- Flutter SDK 3.11.0+
+No Flutter toolchain required — grab a prebuilt desktop binary from the [latest release](https://github.com/onaonbir/Cloodsy-S3-GUI/releases/latest):
+
+| Platform | File | Install |
+|----------|------|---------|
+| Windows | `cloodsy-s3-gui-*.msix` | Double-click to install (one-time: trust the bundled test certificate) |
+| Windows (portable) | `cloodsy-s3-gui-windows-x64.zip` | Unzip and run `cloodsy-s3.exe` |
+| macOS | `cloodsy-s3-gui-*-macos.dmg` | Open the DMG, drag to Applications |
+| Linux | `cloodsy-s3-gui-*-x86_64.AppImage` | `chmod +x` then run |
+| Linux (portable) | `cloodsy-s3-gui-linux-x64.tar.gz` | Extract and run `cloodsy-s3` |
+
+Builds are produced automatically by GitHub Actions on every `v*` tag.
+
+### First-launch notes (unsigned builds)
+
+These binaries are **not code-signed yet**, so the OS will warn on first launch. This is expected — the workaround is one-time:
+
+- **Windows (SmartScreen):** click *More info* → *Run anyway*. For the MSIX, first install the included `.cer` test certificate (right-click → Install Certificate → Local Machine → *Trusted People*).
+- **macOS (Gatekeeper):** right-click the app → *Open* → *Open*, or run `xattr -cr "/Applications/Cloodsy S3 GUI.app"` once.
+- **Linux (AppImage):** ensure FUSE is available (`sudo apt install libfuse2`), then `chmod +x *.AppImage && ./cloodsy-s3-gui-*.AppImage`.
+
+## Requirements (building from source)
+
+- Flutter SDK 3.41.4 (pinned via FVM — see `.fvmrc`)
 - A running Cloodsy S3 server with the Admin API enabled
 
 ### Server-Side Setup
@@ -229,6 +254,10 @@ Six tabs managed from the sidebar (desktop) or tab bar (mobile):
 - Quota: set size with unit selector (KB/MB/GB/TB), remove quota option
 - Storage directory: set absolute path or reset to default
 - Versioning: toggle switch (Enabled/Suspended)
+- Public Read: toggle switch — allow anonymous object reads (GET/HEAD)
+- WebDAV Access: toggle switch — make the bucket mountable as a network drive
+- Image Optimization: **Reprocess** button — regenerate optimized image variants in the background
+- WebDAV Mount: when WebDAV is enabled for the bucket, a card shows the mount URL (with a copy button) and a reminder that the username is an access key and the password its secret key
 
 **Lifecycle** — Auto-expiration rules:
 - Rule name, expiration days, prefix filter
@@ -297,7 +326,8 @@ The GUI communicates with the Cloodsy S3 Admin API (default port 9001):
 | Status | `GET /status` |
 | Admins | `GET/POST /admins`, `DELETE /admins/{user}`, `PUT /admins/{user}/password` |
 | Buckets | `GET/POST /buckets`, `GET/DELETE /buckets/{name}` |
-| Config | `PUT .../quota`, `PUT .../storage`, `GET/PUT .../versioning` |
+| Config | `PUT .../quota`, `PUT .../storage`, `GET/PUT .../versioning`, `PUT .../public-read`, `PUT .../webdav` |
+| Images | `POST .../reprocess` (regenerate optimized variants) |
 | Credentials | `GET/POST .../credentials`, `DELETE /credentials/{key}` |
 | Lifecycle | `GET/POST/DELETE .../lifecycle` |
 | Webhooks | `GET/POST .../webhooks`, `DELETE /webhooks/{id}` |
@@ -316,6 +346,18 @@ flutter build apk        # Android
 flutter build ios         # iOS
 flutter build web         # Web
 ```
+
+### Releasing (automated)
+
+A GitHub Actions workflow (`.github/workflows/release.yml`) builds and publishes installers on every version tag. To cut a release:
+
+```bash
+# bump version in pubspec.yaml, commit, then:
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+The workflow builds in parallel on `windows-latest`, `macos-latest`, and `ubuntu-latest` (Flutter desktop can't cross-compile), reads the pinned Flutter version from `.fvmrc`, and attaches `.msix` + `.zip` (Windows), `.dmg` (macOS), and `.AppImage` + `.tar.gz` (Linux) to the GitHub Release. Builds are currently unsigned — code signing / notarization can be added later via repository secrets.
 
 ## Dependencies
 
