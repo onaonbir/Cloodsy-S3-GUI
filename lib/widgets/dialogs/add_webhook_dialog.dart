@@ -32,7 +32,8 @@ class _AddWebhookDialogState extends State<AddWebhookDialog> {
     if (url.isEmpty) return;
 
     setState(() => _isLoading = true);
-    final success = await context.read<BucketProvider>().addWebhook(
+    final bp = context.read<BucketProvider>();
+    final success = await bp.addWebhook(
           widget.bucketName,
           _nameController.text.trim(),
           url,
@@ -43,6 +44,9 @@ class _AddWebhookDialogState extends State<AddWebhookDialog> {
         Navigator.pop(context);
       } else {
         setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(bp.error ?? 'Failed to add webhook')),
+        );
       }
     }
   }

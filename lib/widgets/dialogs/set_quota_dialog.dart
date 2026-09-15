@@ -33,17 +33,24 @@ class _SetQuotaDialogState extends State<SetQuotaDialog> {
     }
   }
 
-  Future<void> _save() async {
+  Future<void> _apply(int bytes) async {
     setState(() => _isLoading = true);
-    await context.read<BucketProvider>().setQuota(widget.bucketName, _toBytes());
-    if (mounted) Navigator.pop(context);
+    final bp = context.read<BucketProvider>();
+    final success = await bp.setQuota(widget.bucketName, bytes);
+    if (!mounted) return;
+    if (success) {
+      Navigator.pop(context);
+    } else {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(bp.error ?? 'Failed to set quota')),
+      );
+    }
   }
 
-  Future<void> _removeQuota() async {
-    setState(() => _isLoading = true);
-    await context.read<BucketProvider>().setQuota(widget.bucketName, 0);
-    if (mounted) Navigator.pop(context);
-  }
+  Future<void> _save() => _apply(_toBytes());
+
+  Future<void> _removeQuota() => _apply(0);
 
   @override
   Widget build(BuildContext context) {

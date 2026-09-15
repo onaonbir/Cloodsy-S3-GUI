@@ -18,6 +18,11 @@ class BucketProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
+  /// HTTP status of the last failed request (0 = no connection), so screens
+  /// can react to specific codes (409 busy/not-empty, 429, …) while [error]
+  /// carries the server's own message text.
+  int? _errorStatus;
+
   // Detail state
   Bucket? _selectedBucket;
   List<Credential> _credentials = [];
@@ -28,6 +33,7 @@ class BucketProvider extends ChangeNotifier {
   List<Bucket> get buckets => _buckets;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  int? get errorStatus => _errorStatus;
   Bucket? get selectedBucket => _selectedBucket;
   List<Credential> get credentials => _credentials;
   List<LifecycleRule> get lifecycleRules => _lifecycleRules;
@@ -60,6 +66,13 @@ class BucketProvider extends ChangeNotifier {
 
   void updateAuth(AuthProvider auth) {
     _api = auth.api;
+  }
+
+  /// Records a failed request so the UI can show the server's message.
+  void _fail(ApiException e) {
+    _error = e.message;
+    _errorStatus = e.statusCode;
+    notifyListeners();
   }
 
   // --- Status ---
@@ -116,9 +129,8 @@ class BucketProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     } on ApiException catch (e) {
-      _error = e.message;
       _isLoading = false;
-      notifyListeners();
+      _fail(e);
     }
   }
 
@@ -132,9 +144,8 @@ class BucketProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     } on ApiException catch (e) {
-      _error = e.message;
       _isLoading = false;
-      notifyListeners();
+      _fail(e);
     }
   }
 
@@ -147,21 +158,24 @@ class BucketProvider extends ChangeNotifier {
       await fetchBuckets();
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
 
-  Future<bool> deleteBucket(String name) async {
+  /// Deletes a bucket. The server answers 409 while object versions or
+  /// delete markers remain; [force] retries with `?force=true`, which
+  /// removes everything along with the bucket.
+  Future<bool> deleteBucket(String name, {bool force = false}) async {
     try {
-      await _api!.delete('/buckets/$name');
+      final path = force ? '/buckets/$name?force=true' : '/buckets/$name';
+      await _api!.delete(path,
+          timeout: force ? ApiClient.longTimeout : null);
       _buckets.removeWhere((b) => b.name == name);
       notifyListeners();
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -174,8 +188,7 @@ class BucketProvider extends ChangeNotifier {
       await fetchBucketDetail(name);
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -184,12 +197,12 @@ class BucketProvider extends ChangeNotifier {
 
   Future<bool> setStorage(String name, String storageDir) async {
     try {
-      await _api!.put('/buckets/$name/storage', {'storage_dir': storageDir});
+      await _api!.put('/buckets/$name/storage', {'storage_dir': storageDir},
+          ApiClient.longTimeout);
       await fetchBucketDetail(name);
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -202,8 +215,7 @@ class BucketProvider extends ChangeNotifier {
       await fetchBucketDetail(name);
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -214,8 +226,7 @@ class BucketProvider extends ChangeNotifier {
       await fetchBucketDetail(name);
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -226,8 +237,7 @@ class BucketProvider extends ChangeNotifier {
       await fetchBucketDetail(name);
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -237,8 +247,7 @@ class BucketProvider extends ChangeNotifier {
       await _api!.post('/buckets/$name/reprocess', {});
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -252,8 +261,7 @@ class BucketProvider extends ChangeNotifier {
       _credentials = list.map((c) => Credential.fromJson(c)).toList();
       notifyListeners();
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
     }
   }
 
@@ -268,8 +276,7 @@ class BucketProvider extends ChangeNotifier {
       await fetchCredentials(bucketName);
       return cred;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return null;
     }
   }
@@ -280,8 +287,7 @@ class BucketProvider extends ChangeNotifier {
       await fetchCredentials(bucketName);
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -295,8 +301,7 @@ class BucketProvider extends ChangeNotifier {
       _lifecycleRules = list.map((r) => LifecycleRule.fromJson(r)).toList();
       notifyListeners();
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
     }
   }
 
@@ -311,8 +316,7 @@ class BucketProvider extends ChangeNotifier {
       await fetchLifecycleRules(bucketName);
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -327,8 +331,7 @@ class BucketProvider extends ChangeNotifier {
       await fetchLifecycleRules(bucketName);
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -342,8 +345,7 @@ class BucketProvider extends ChangeNotifier {
       _webhooks = list.map((w) => Webhook.fromJson(w)).toList();
       notifyListeners();
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
     }
   }
 
@@ -359,8 +361,7 @@ class BucketProvider extends ChangeNotifier {
       await fetchWebhooks(bucketName);
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -371,8 +372,7 @@ class BucketProvider extends ChangeNotifier {
       await fetchWebhooks(bucketName);
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -404,9 +404,8 @@ class BucketProvider extends ChangeNotifier {
       _objectsLoading = false;
       notifyListeners();
     } on ApiException catch (e) {
-      _error = e.message;
       _objectsLoading = false;
-      notifyListeners();
+      _fail(e);
     }
   }
 
@@ -415,22 +414,36 @@ class BucketProvider extends ChangeNotifier {
       await _api!.delete('/buckets/$bucketName/objects/${Uri.encodeFull(key)}');
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
 
-  Future<bool> deletePrefix(String bucketName, String prefix) async {
+  /// Deletes every object under [prefix]. Returns the server's counts
+  /// (`deleted`, `failed`) or null when the request itself failed; on a
+  /// half-way failure the counts are still reported through [error].
+  Future<({int deleted, int failed})?> deletePrefix(
+      String bucketName, String prefix) async {
     try {
-      await _api!.post('/buckets/$bucketName/objects/delete-prefix', {
-        'prefix': prefix,
-      });
-      return true;
+      final data = await _api!.post(
+          '/buckets/$bucketName/objects/delete-prefix',
+          {'prefix': prefix},
+          ApiClient.longTimeout);
+      return (
+        deleted: (data['deleted'] as num?)?.toInt() ?? 0,
+        failed: (data['failed'] as num?)?.toInt() ?? 0,
+      );
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
-      return false;
+      final deleted = (e.data?['deleted'] as num?)?.toInt();
+      final failed = (e.data?['failed'] as num?)?.toInt();
+      if (deleted != null && failed != null) {
+        _fail(ApiException(e.statusCode,
+            '${e.message} ($deleted deleted, $failed failed)',
+            data: e.data));
+      } else {
+        _fail(e);
+      }
+      return null;
     }
   }
 
@@ -446,8 +459,7 @@ class BucketProvider extends ChangeNotifier {
       _admins = list.map((a) => AdminUser.fromJson(a)).toList();
       notifyListeners();
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
     }
   }
 
@@ -460,8 +472,7 @@ class BucketProvider extends ChangeNotifier {
       await fetchAdmins();
       return data;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return null;
     }
   }
@@ -472,8 +483,7 @@ class BucketProvider extends ChangeNotifier {
       await fetchAdmins();
       return true;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return false;
     }
   }
@@ -486,14 +496,14 @@ class BucketProvider extends ChangeNotifier {
       final data = await _api!.put('/admins/$username/password', body);
       return data;
     } on ApiException catch (e) {
-      _error = e.message;
-      notifyListeners();
+      _fail(e);
       return null;
     }
   }
 
   void clearError() {
     _error = null;
+    _errorStatus = null;
     notifyListeners();
   }
 }

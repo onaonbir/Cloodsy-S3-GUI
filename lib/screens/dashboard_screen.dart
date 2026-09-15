@@ -295,14 +295,71 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
     );
-    if (confirmed == true && mounted) {
-      final bp = context.read<BucketProvider>();
-      final success = await bp.deleteBucket(name);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content:
-                Text(success ? "'$name' deleted" : bp.error ?? 'Failed')));
-      }
+    if (confirmed != true || !context.mounted) return;
+
+    final bp = context.read<BucketProvider>();
+    var success = await bp.deleteBucket(name);
+    if (!context.mounted) return;
+
+    // 409 with a "not empty" message: objects, old versions or delete
+    // markers remain. Offer a forced delete that removes them too. A 409
+    // for a busy bucket (move/reprocess running) is just reported.
+    final busy = bp.error?.startsWith('bucket is busy') ?? false;
+    if (!success && bp.errorStatus == 409 && !busy) {
+      final force = await _confirmForceDelete(context, name, bp.error);
+      if (force != true || !context.mounted) return;
+      success = await bp.deleteBucket(name, force: true);
+      if (!context.mounted) return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(success ? "'$name' deleted" : bp.error ?? 'Failed')));
+  }
+
+  Future<bool?> _confirmForceDelete(
+      BuildContext context, String name, String? serverMessage) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Bucket Not Empty'),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("'$name' still contains objects, older object versions "
+                  'or delete markers, so the server refused to remove it.'),
+              if (serverMessage != null && serverMessage.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(serverMessage,
+                    style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                        fontFamily: 'monospace')),
+              ],
+              const SizedBox(height: 14),
+              Text(
+                'Delete anyway permanently removes every object, all '
+                'versions and delete markers together with the bucket. '
+                'This cannot be undone.',
+                style: TextStyle(
+                    color: Theme.of(ctx).colorScheme.error,
+                    fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          OutlinedButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(ctx).colorScheme.error),
+            child: const Text('Delete anyway'),
+          ),
+        ],
+      ),
+    );
   }
 }

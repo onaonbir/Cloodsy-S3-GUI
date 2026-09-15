@@ -104,12 +104,39 @@ class _ShellScreenState extends State<ShellScreen> {
     context.read<BucketProvider>().fetchBuckets();
   }
 
+  /// The session can end without the user asking (token expired and no
+  /// stored password, password changed elsewhere, account deleted): the
+  /// AuthProvider drops its token and we return to the server list.
+  void _onSessionLost(AuthProvider auth) {
+    if (!_connected) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_connected) return;
+      // Pop any pushed bucket screen (mobile layout) back to the shell.
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      setState(() {
+        _activeServerId = null;
+        _connected = false;
+        _openBucketName = null;
+        _bucketTab = 0;
+        _showAdmins = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(auth.error ?? 'Session expired. Please reconnect.'),
+      ));
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final sp = context.watch<ServerProvider>();
+    final auth = context.watch<AuthProvider>();
     final activeServer = _activeServerId != null
         ? sp.servers.where((s) => s.id == _activeServerId).firstOrNull
         : null;
+
+    if (_connected && !auth.isLoggedIn && _connectingId == null) {
+      _onSessionLost(auth);
+    }
 
     if (_isWide && _isDesktop) {
       return _buildDesktopLayout(activeServer);

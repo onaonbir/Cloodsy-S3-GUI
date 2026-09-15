@@ -107,13 +107,21 @@ class _AddServerDialogState extends State<AddServerDialog> {
                 controller: _urlController,
                 decoration: const InputDecoration(
                   labelText: 'Server URL',
-                  hintText: 'http://192.168.1.100:9001',
+                  hintText: 'https://192.168.1.100:9001',
+                  helperText:
+                      'http:// or https:// (use https when admin TLS is on)',
                 ),
                 keyboardType: TextInputType.url,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'URL required';
                   final uri = Uri.tryParse(v.trim());
-                  if (uri == null || !uri.hasScheme) return 'Invalid URL';
+                  if (uri == null || !uri.hasScheme) {
+                    return 'Include the scheme, e.g. https://host:9001';
+                  }
+                  if (uri.scheme != 'http' && uri.scheme != 'https') {
+                    return 'Only http:// and https:// are supported';
+                  }
+                  if (uri.host.isEmpty) return 'Host missing';
                   return null;
                 },
               ),

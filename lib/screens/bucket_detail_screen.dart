@@ -216,6 +216,8 @@ class _OverviewTab extends StatelessWidget {
               _RowData('Quota', bucket.quotaBytes > 0
                   ? formatBytes(bucket.quotaBytes) : 'Unlimited'),
               _RowData('Versioning', bucket.versioningDisplay),
+              _RowData('Public Read', bucket.publicReadDisplay),
+              _RowData('WebDAV', bucket.webdavEnabled ? 'Enabled' : 'Disabled'),
               _RowData('Storage', bucket.storagePath ??
                   (bucket.storageDir.isNotEmpty
                       ? '${bucket.storageDir} (custom)' : 'Default')),
@@ -492,9 +494,13 @@ class _CredentialsTabState extends State<_CredentialsTab> {
       ),
     );
     if (confirmed == true && ctx.mounted) {
-      await ctx
-          .read<BucketProvider>()
-          .deleteCredential(accessKey, widget.bucketName);
+      final bp = ctx.read<BucketProvider>();
+      final ok = await bp.deleteCredential(accessKey, widget.bucketName);
+      if (!ok && ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(content: Text(bp.error ?? 'Failed to delete credential')),
+        );
+      }
     }
   }
 }
@@ -540,10 +546,11 @@ class _SettingsTab extends StatelessWidget {
               subtitle: Text(bucket.versioningDisplay),
               trailing: Switch(
                 value: bucket.versioning == 'Enabled',
-                onChanged: (enabled) {
-                  bp.setVersioning(
-                      bucketName, enabled ? 'Enabled' : 'Suspended');
-                },
+                onChanged: (enabled) => _apply(
+                    context,
+                    bp,
+                    () => bp.setVersioning(
+                        bucketName, enabled ? 'Enabled' : 'Suspended')),
               ),
             ),
           ),
@@ -556,9 +563,8 @@ class _SettingsTab extends StatelessWidget {
                   : 'Signed access only'),
               trailing: Switch(
                 value: bucket.publicRead,
-                onChanged: (enabled) {
-                  bp.setPublicRead(bucketName, enabled);
-                },
+                onChanged: (enabled) => _apply(
+                    context, bp, () => bp.setPublicRead(bucketName, enabled)),
               ),
             ),
           ),
@@ -571,9 +577,8 @@ class _SettingsTab extends StatelessWidget {
                   : 'WebDAV disabled'),
               trailing: Switch(
                 value: bucket.webdavEnabled,
-                onChanged: (enabled) {
-                  bp.setWebdavEnabled(bucketName, enabled);
-                },
+                onChanged: (enabled) => _apply(context, bp,
+                    () => bp.setWebdavEnabled(bucketName, enabled)),
               ),
             ),
           ),
@@ -585,13 +590,21 @@ class _SettingsTab extends StatelessWidget {
               trailing: FilledButton(
                 onPressed: () async {
                   final ok = await bp.reprocessImages(bucketName);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(ok
-                          ? 'Reprocessing started'
-                          : 'Reprocess failed'),
-                    ));
+                  if (!context.mounted) return;
+                  final String msg;
+                  if (ok) {
+                    msg = 'Reprocessing started';
+                  } else if (bp.errorStatus == 409) {
+                    // "bucket is busy: <op> in progress"
+                    final busyWith = bp.error ?? '';
+                    msg = busyWith.contains('reprocess')
+                        ? 'Reprocess is already running for this bucket'
+                        : 'Bucket is busy: ${busyWith.split(': ').last}';
+                  } else {
+                    msg = bp.error ?? 'Reprocess failed';
                   }
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text(msg)));
                 },
                 child: const Text('Reprocess'),
               ),
@@ -635,6 +648,19 @@ class _SettingsTab extends StatelessWidget {
         );
       }),
     );
+  }
+
+  /// Runs a settings call and shows the server's error text when it is
+  /// rejected (400 invalid body, 409 busy bucket, 404 …); the switch snaps
+  /// back on its own because the bucket is re-fetched only on success.
+  Future<void> _apply(BuildContext context, BucketProvider bp,
+      Future<bool> Function() call) async {
+    final ok = await call();
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(bp.error ?? 'Update failed')),
+      );
+    }
   }
 
   Widget _tile(BuildContext context,
@@ -692,8 +718,15 @@ class _LifecycleTab extends StatelessWidget {
                     trailing: IconButton(
                       icon: Icon(LucideIcons.trash2,
                           size: 18, color: theme.colorScheme.error),
-                      onPressed: () => bp.deleteLifecycleRules(bucketName,
-                          prefix: rule.prefix),
+                      onPressed: () async {
+                        final ok = await bp.deleteLifecycleRules(bucketName,
+                            prefix: rule.prefix);
+                        if (!ok && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content:
+                                  Text(bp.error ?? 'Failed to delete rule')));
+                        }
+                      },
                     ),
                   ),
                 );
@@ -747,7 +780,14 @@ class _WebhooksTab extends StatelessWidget {
                     trailing: IconButton(
                       icon: Icon(LucideIcons.trash2,
                           size: 18, color: theme.colorScheme.error),
-                      onPressed: () => bp.deleteWebhook(hook.id, bucketName),
+                      onPressed: () async {
+                        final ok = await bp.deleteWebhook(hook.id, bucketName);
+                        if (!ok && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(
+                                  bp.error ?? 'Failed to delete webhook')));
+                        }
+                      },
                     ),
                   ),
                 );
@@ -1097,11 +1137,16 @@ class _FilesTabState extends State<_FilesTab> {
       ),
     );
     if (confirmed == true && context.mounted) {
-      final success =
-          await context.read<BucketProvider>().deleteObject(widget.bucketName, key);
-      if (success && context.mounted) {
+      final bp = context.read<BucketProvider>();
+      final success = await bp.deleteObject(widget.bucketName, key);
+      if (!context.mounted) return;
+      if (success) {
         setState(() => _selected.remove(key));
         _load();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(bp.error ?? 'Failed to delete object')),
+        );
       }
     }
   }
@@ -1128,15 +1173,23 @@ class _FilesTabState extends State<_FilesTab> {
       ),
     );
     if (confirmed == true && context.mounted) {
-      final success = await context
-          .read<BucketProvider>()
-          .deletePrefix(widget.bucketName, prefix);
-      if (success && context.mounted) {
-        _load();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Folder "$folderName" deleted')),
-        );
+      final bp = context.read<BucketProvider>();
+      final result = await bp.deletePrefix(widget.bucketName, prefix);
+      if (!context.mounted) return;
+      _load();
+      final String msg;
+      if (result == null) {
+        msg = bp.error ?? 'Failed to delete folder';
+      } else if (result.failed > 0) {
+        msg = 'Folder "$folderName": ${result.deleted} deleted, '
+            '${result.failed} could not be deleted (see server log)';
+      } else {
+        msg = 'Folder "$folderName" deleted (${result.deleted} objects)';
       }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(msg),
+        duration: Duration(seconds: result?.failed == 0 ? 4 : 8),
+      ));
     }
   }
 
@@ -1162,11 +1215,27 @@ class _FilesTabState extends State<_FilesTab> {
     );
     if (confirmed == true && mounted) {
       final bp = context.read<BucketProvider>();
-      for (final key in _selected.toList()) {
-        await bp.deleteObject(widget.bucketName, key);
+      final keys = _selected.toList();
+      final failed = <String>[];
+      String? lastError;
+      for (final key in keys) {
+        if (await bp.deleteObject(widget.bucketName, key)) {
+          _selected.remove(key);
+        } else {
+          failed.add(key);
+          lastError = bp.error;
+        }
       }
-      setState(() => _selected.clear());
+      if (!mounted) return;
+      setState(() {});
       _load();
+      if (failed.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${failed.length} of ${keys.length} objects could not '
+              'be deleted${lastError != null ? ': $lastError' : ''}'),
+          duration: const Duration(seconds: 8),
+        ));
+      }
     }
   }
 }

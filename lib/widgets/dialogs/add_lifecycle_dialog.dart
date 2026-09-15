@@ -30,7 +30,8 @@ class _AddLifecycleDialogState extends State<AddLifecycleDialog> {
     if (days == null || days <= 0) return;
 
     setState(() => _isLoading = true);
-    final success = await context.read<BucketProvider>().addLifecycleRule(
+    final bp = context.read<BucketProvider>();
+    final success = await bp.addLifecycleRule(
           widget.bucketName,
           _nameController.text.trim(),
           _prefixController.text.trim(),
@@ -40,6 +41,9 @@ class _AddLifecycleDialogState extends State<AddLifecycleDialog> {
         Navigator.pop(context);
       } else {
         setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(bp.error ?? 'Failed to add rule')),
+        );
       }
     }
   }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart';
@@ -283,6 +284,22 @@ class _AdminScreenState extends State<AdminScreen> {
   }
 }
 
+// Mirrors the server's password policy (admin/admin.go validatePassword):
+// at least 8 characters and at most 72 bytes, the bcrypt input limit.
+const int _minPasswordLen = 8;
+const int _maxPasswordBytes = 72;
+const String _passwordHint = '8+ characters, max 72 bytes';
+
+String? _passwordRuleError(String password) {
+  if (password.length < _minPasswordLen) {
+    return 'Password must be at least $_minPasswordLen characters';
+  }
+  if (utf8.encode(password).length > _maxPasswordBytes) {
+    return 'Password must be at most $_maxPasswordBytes bytes (bcrypt limit)';
+  }
+  return null;
+}
+
 // ========================= Create Admin Dialog =========================
 class _CreateAdminDialog extends StatefulWidget {
   const _CreateAdminDialog();
@@ -296,6 +313,7 @@ class _CreateAdminDialogState extends State<_CreateAdminDialog> {
   final _passwordController = TextEditingController();
   bool _autoGenerate = true;
   bool _isLoading = false;
+  String? _passwordError;
 
   @override
   void dispose() {
@@ -308,9 +326,20 @@ class _CreateAdminDialogState extends State<_CreateAdminDialog> {
     final username = _usernameController.text.trim();
     if (username.isEmpty) return;
 
-    setState(() => _isLoading = true);
-    final bp = context.read<BucketProvider>();
     final password = _autoGenerate ? '' : _passwordController.text;
+    if (!_autoGenerate) {
+      final err = _passwordRuleError(password);
+      if (err != null) {
+        setState(() => _passwordError = err);
+        return;
+      }
+    }
+
+    setState(() {
+      _isLoading = true;
+      _passwordError = null;
+    });
+    final bp = context.read<BucketProvider>();
     final result = await bp.createAdmin(username, password);
 
     if (mounted) {
@@ -359,11 +388,19 @@ class _CreateAdminDialogState extends State<_CreateAdminDialog> {
               const SizedBox(height: 8),
               TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Password',
                   hintText: 'Enter custom password',
+                  helperText: _passwordHint,
+                  errorText: _passwordError,
                 ),
                 obscureText: true,
+                onChanged: (_) {
+                  if (_passwordError != null) {
+                    setState(() => _passwordError = null);
+                  }
+                },
+                onSubmitted: (_) => _create(),
               ),
             ],
           ],
@@ -400,6 +437,7 @@ class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
   final _passwordController = TextEditingController();
   bool _autoGenerate = true;
   bool _isLoading = false;
+  String? _passwordError;
 
   @override
   void dispose() {
@@ -408,9 +446,20 @@ class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
   }
 
   Future<void> _reset() async {
-    setState(() => _isLoading = true);
-    final bp = context.read<BucketProvider>();
     final password = _autoGenerate ? '' : _passwordController.text;
+    if (!_autoGenerate) {
+      final err = _passwordRuleError(password);
+      if (err != null) {
+        setState(() => _passwordError = err);
+        return;
+      }
+    }
+
+    setState(() {
+      _isLoading = true;
+      _passwordError = null;
+    });
+    final bp = context.read<BucketProvider>();
     final result = await bp.resetAdminPassword(widget.username, password);
 
     if (mounted) {
@@ -449,11 +498,19 @@ class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
               const SizedBox(height: 8),
               TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'New Password',
+                  helperText: _passwordHint,
+                  errorText: _passwordError,
                 ),
                 obscureText: true,
                 autofocus: true,
+                onChanged: (_) {
+                  if (_passwordError != null) {
+                    setState(() => _passwordError = null);
+                  }
+                },
+                onSubmitted: (_) => _reset(),
               ),
             ],
           ],

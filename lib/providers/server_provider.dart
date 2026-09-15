@@ -51,6 +51,7 @@ class ServerProvider extends ChangeNotifier {
     _servers.removeWhere((s) => s.id == id);
     await _secureStorage.delete(key: 'pw_$id');
     await _secureStorage.delete(key: 'token_$id');
+    await _secureStorage.delete(key: 'token_exp_$id');
     if (_activeServer?.id == id) _activeServer = null;
     await _persist();
     notifyListeners();
@@ -64,12 +65,27 @@ class ServerProvider extends ChangeNotifier {
     return _secureStorage.read(key: 'token_$serverId');
   }
 
-  Future<void> saveToken(String serverId, String token) async {
+  /// Server-reported expiry of the saved token, or null when unknown.
+  Future<DateTime?> getTokenExpiry(String serverId) async {
+    final raw = await _secureStorage.read(key: 'token_exp_$serverId');
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  Future<void> saveToken(String serverId, String token,
+      {DateTime? expiresAt}) async {
     await _secureStorage.write(key: 'token_$serverId', value: token);
+    if (expiresAt != null) {
+      await _secureStorage.write(
+          key: 'token_exp_$serverId', value: expiresAt.toIso8601String());
+    } else {
+      await _secureStorage.delete(key: 'token_exp_$serverId');
+    }
   }
 
   Future<void> clearToken(String serverId) async {
     await _secureStorage.delete(key: 'token_$serverId');
+    await _secureStorage.delete(key: 'token_exp_$serverId');
   }
 
   void setActiveServer(ServerConnection? server) {
