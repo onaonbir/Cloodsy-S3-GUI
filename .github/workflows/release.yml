@@ -15,8 +15,13 @@ permissions:
   contents: write
 
 jobs:
+  # Analyze + test first; no binaries are published from a red tree.
+  verify:
+    uses: ./.github/workflows/ci.yml
+
   # Read the pinned Flutter version from .fvmrc so CI matches local FVM exactly.
   prepare:
+    needs: verify
     runs-on: ubuntu-latest
     outputs:
       flutter_version: ${{ steps.meta.outputs.flutter_version }}

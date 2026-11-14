@@ -6,11 +6,16 @@ class ServerConnection {
   final String url;
   final String username;
 
+  /// Public S3 endpoint used for share links (e.g. behind a reverse proxy).
+  /// Empty → derived from the admin host and the server's S3 port.
+  final String s3Url;
+
   ServerConnection({
     required this.id,
     required this.name,
     required this.url,
     required this.username,
+    this.s3Url = '',
   });
 
   Map<String, dynamic> toJson() => {
@@ -18,6 +23,7 @@ class ServerConnection {
         'name': name,
         'url': url,
         'username': username,
+        if (s3Url.isNotEmpty) 's3_url': s3Url,
       };
 
   factory ServerConnection.fromJson(Map<String, dynamic> json) {
@@ -26,6 +32,7 @@ class ServerConnection {
       name: json['name'] as String,
       url: json['url'] as String,
       username: json['username'] as String,
+      s3Url: json['s3_url'] as String? ?? '',
     );
   }
 
@@ -35,15 +42,19 @@ class ServerConnection {
 
   static List<ServerConnection> decodeList(String json) {
     final list = jsonDecode(json) as List;
-    return list.map((j) => ServerConnection.fromJson(j)).toList();
+    return list
+        .map((j) => ServerConnection.fromJson(j as Map<String, dynamic>))
+        .toList();
   }
 
-  ServerConnection copyWith({String? name, String? url, String? username}) {
+  ServerConnection copyWith(
+      {String? name, String? url, String? username, String? s3Url}) {
     return ServerConnection(
       id: id,
       name: name ?? this.name,
       url: url ?? this.url,
       username: username ?? this.username,
+      s3Url: s3Url ?? this.s3Url,
     );
   }
 }

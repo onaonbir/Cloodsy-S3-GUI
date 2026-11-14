@@ -29,7 +29,7 @@ class Bucket {
 
   factory Bucket.fromJson(Map<String, dynamic> json) {
     return Bucket(
-      id: json['id'] as int,
+      id: (json['id'] as num?)?.toInt() ?? 0,
       name: json['name'] as String,
       quotaBytes: (json['quota_bytes'] as num?)?.toInt() ?? 0,
       versioning: json['versioning'] as String? ?? '',
@@ -46,6 +46,9 @@ class Bucket {
 
   String get versioningDisplay =>
       versioning.isEmpty ? 'Disabled' : versioning;
+
+  bool get versioningEnabled => versioning == 'Enabled';
+  bool get hasQuota => quotaBytes > 0;
 
   String get publicReadDisplay => publicRead ? 'Enabled' : 'Disabled';
 

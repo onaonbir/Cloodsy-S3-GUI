@@ -11,7 +11,7 @@ class AdminUser {
 
   factory AdminUser.fromJson(Map<String, dynamic> json) {
     return AdminUser(
-      id: (json['id'] as num).toInt(),
+      id: (json['id'] as num?)?.toInt() ?? 0,
       username: json['username'] as String,
       createdAt: json['created_at'] as String? ?? '',
     );
