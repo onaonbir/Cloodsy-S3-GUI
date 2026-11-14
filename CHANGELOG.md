@@ -6,6 +6,10 @@ All notable changes to Cloodsy S3 GUI are documented here. The format follows
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [2.0.0] - 2026-11-14
+
 A complete rewrite: new architecture, new design and many new features.
 Features marked *(server 1.4)* need Cloodsy S3 1.4.0 or newer; the app reads
 the server's `features` list and hides what an older server doesn't support.
@@ -85,5 +89,6 @@ the server's `features` list and hides what an older server doesn't support.
 
 Initial release.
 
-[Unreleased]: https://github.com/onaonbir/Cloodsy-S3-GUI/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/onaonbir/Cloodsy-S3-GUI/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/onaonbir/Cloodsy-S3-GUI/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/onaonbir/Cloodsy-S3-GUI/releases/tag/v1.1.0
