@@ -1,20 +1,22 @@
+# App icons from the Cloodsy brand kit (docs/brand/README.md): S3 GUI uses the signal cyan icon.
+# Regenerate: fvm dart run icons_launcher:create
 icons_launcher:
-  image_path: "assets/logos/logo_3.png"
+  image_path: "assets/brand/app-icon.png"
   platforms:
     android:
       enable: true
-      image_path: "assets/logos/logo_3.png"
-      adaptive_background_color: "#FFFFFF"
-      adaptive_foreground_image: "assets/logos/logo_3.png"
+      image_path: "assets/brand/app-icon.png"
+      adaptive_background_color: "#2EC8F0"
+      adaptive_foreground_image: "assets/brand/app-icon-foreground.png"
     ios:
       enable: true
-      image_path: "assets/logos/logo_3.png"
+      image_path: "assets/brand/app-icon-full.png"
     macos:
       enable: true
-      image_path: "assets/logos/logo_3.png"
+      image_path: "assets/brand/app-icon-macos.png"
     windows:
       enable: true
-      image_path: "assets/logos/logo_4.png"
+      image_path: "assets/brand/app-icon.png"
     linux:
       enable: true
-      image_path: "assets/logos/logo_3.png"
+      image_path: "assets/brand/app-icon.png"

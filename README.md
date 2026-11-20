@@ -1,5 +1,10 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo-dark.svg">
+  <img src="docs/brand/logo-light.svg" alt="Cloodsy S3 GUI" height="64">
+</picture>
+
 # Cloodsy S3 GUI
 
 **A desktop admin console for [Cloodsy S3](https://github.com/onaonbir/Cloodsy-S3) servers.**

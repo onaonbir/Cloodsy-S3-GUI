@@ -115,7 +115,7 @@ jobs:
           APPDIR=AppDir
           mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications"
           cp -r build/linux/x64/release/bundle/* "$APPDIR/usr/bin/"
-          cp assets/logos/logo_1.png "$APPDIR/cloodsy-s3.png"
+          cp assets/brand/app-icon.png "$APPDIR/cloodsy-s3.png"
           {
             echo "[Desktop Entry]"
             echo "Type=Application"
