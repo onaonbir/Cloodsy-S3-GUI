@@ -1178,7 +1178,7 @@ class _FileList extends StatelessWidget {
         for (final f in folders)
           _Row(
             icon: LucideIcons.folder,
-            iconColor: const Color(0xFF5B9DF5),
+            iconColor: const Color(0xFFFFC107), // the app's folder colour (desktop --c-folder)
             name: ctrl.folderName(f),
             bold: true,
             onTap: () => onOpen(f),

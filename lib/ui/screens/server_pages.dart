@@ -740,9 +740,16 @@ class _ConfigView extends StatelessWidget {
   }
 }
 
+/// One level of the configuration tree. Nested sections are indented by
+/// [_indent]; their label column shrinks by the same amount, so every value
+/// starts at the same x however deep it sits.
 class _ConfigNode extends StatelessWidget {
   final Object? value;
-  const _ConfigNode({required this.value});
+  final int depth;
+  const _ConfigNode({required this.value, this.depth = 0});
+
+  static const _indent = 14.0;
+  static const _labelWidth = 200.0;
 
   @override
   Widget build(BuildContext context) {
@@ -762,8 +769,8 @@ class _ConfigNode extends StatelessWidget {
                   children: [
                     Text('${e.key}', style: t.labelLarge),
                     Padding(
-                      padding: const EdgeInsets.only(left: 14, top: 2),
-                      child: _ConfigNode(value: e.value),
+                      padding: const EdgeInsets.only(left: _indent, top: 2),
+                      child: _ConfigNode(value: e.value, depth: depth + 1),
                     ),
                   ],
                 ),
@@ -771,8 +778,8 @@ class _ConfigNode extends StatelessWidget {
             else
               InfoRow(
                 '${e.key}',
-                _ConfigNode(value: e.value),
-                labelWidth: 200,
+                _ConfigNode(value: e.value, depth: depth + 1),
+                labelWidth: _labelWidth - _indent * depth,
               ),
         ],
       );
@@ -784,16 +791,23 @@ class _ConfigNode extends StatelessWidget {
       String() when v.isEmpty => '""',
       _ => '$v',
     };
-    final isBool = v is bool;
+    // Plain mono text for every value, booleans included (green true, muted
+    // false): a pill is taller than a text line and pushed its row out of
+    // line with the label and with the rows around it.
+    final color = switch (v) {
+      true => c.success,
+      false => c.muted,
+      _ when text == '••••' => c.subtle,
+      _ => c.foreground,
+    };
     return Align(
       alignment: Alignment.centerLeft,
-      child: isBool
-          ? Pill(v ? 'true' : 'false', tone: v ? Tone.success : Tone.neutral)
-          : SelectableText(text,
-              style: TextStyle(
-                  fontFamily: AppFonts.mono,
-                  fontSize: 12.5,
-                  color: text == '••••' ? c.subtle : c.foreground)),
+      child: SelectableText(text,
+          style: TextStyle(
+              fontFamily: AppFonts.mono,
+              fontSize: 12.5,
+              fontWeight: v == true ? FontWeight.w600 : null,
+              color: color)),
     );
   }
 }

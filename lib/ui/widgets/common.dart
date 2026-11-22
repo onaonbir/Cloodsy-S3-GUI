@@ -628,7 +628,7 @@ void showToast(BuildContext context, String message, {bool error = false}) {
         children: [
           Icon(error ? LucideIcons.circleAlert : LucideIcons.circleCheck,
               size: 16,
-              color: error ? const Color(0xFFF87171) : const Color(0xFF4ADE80)),
+              color: error ? const Color(0xFFF2665E) : const Color(0xFF4FD08A)),
           const SizedBox(width: 10),
           Expanded(child: Text(message)),
         ],

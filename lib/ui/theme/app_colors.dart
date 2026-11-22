@@ -1,8 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Semantic colour tokens shared with the Cloodsy app family: slate/navy
-/// surfaces, Plus Jakarta Sans, and the brand blue of the Cloodsy cloud logo
-/// as the accent. Widgets read these via `context.colors`, never raw hex.
+/// Semantic colour tokens shared with the Cloodsy app family: the brand kit's
+/// ink and cream with turquoise as the one accent (signal turquoise on ink,
+/// deep turquoise on cream), the same values as the app's
+/// shared/design/tokens.json. Widgets read these via `context.colors`, never raw hex.
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   final Color background; // content area
@@ -52,51 +53,51 @@ class AppColors extends ThemeExtension<AppColors> {
   });
 
   static const light = AppColors(
-    background: Color(0xFFF8FAFC),
-    sidebar: Color(0xFFF1F5F9),
-    titleBar: Color(0xFFF1F5F9),
-    card: Color(0xFFFFFFFF),
-    cardHover: Color(0xFFF8FAFC),
-    border: Color(0xFFE2E8F0),
-    borderStrong: Color(0xFFCBD5E1),
-    foreground: Color(0xFF0F172A),
-    muted: Color(0xFF475569),
-    subtle: Color(0xFF94A3B8),
-    primary: Color(0xFF1D72E8),
+    background: Color(0xFFF2EFE8),
+    sidebar: Color(0xFFEBE7DE),
+    titleBar: Color(0xFFE4E0D6),
+    card: Color(0xFFFBFAF6),
+    cardHover: Color(0xFFF6F3EC),
+    border: Color(0xFFDCD8CE),
+    borderStrong: Color(0xFFC9C4B8),
+    foreground: Color(0xFF161B29),
+    muted: Color(0xFF5E6678),
+    subtle: Color(0xFF8A90A0),
+    primary: Color(0xFF0A6E90),
     onPrimary: Color(0xFFFFFFFF),
-    primarySoft: Color(0x141D72E8),
-    success: Color(0xFF16A34A),
-    successSoft: Color(0x1A16A34A),
-    warning: Color(0xFFD97706),
-    warningSoft: Color(0x1AF59E0B),
-    danger: Color(0xFFDC2626),
-    dangerSoft: Color(0x14DC2626),
-    hover: Color(0x0A0F172A),
-    selected: Color(0x141D72E8),
+    primarySoft: Color(0x140A6E90),
+    success: Color(0xFF12703A),
+    successSoft: Color(0x1A12703A),
+    warning: Color(0xFFA15C07),
+    warningSoft: Color(0x1AA15C07),
+    danger: Color(0xFFC0392B),
+    dangerSoft: Color(0x14C0392B),
+    hover: Color(0x0A161B29),
+    selected: Color(0x140A6E90),
   );
 
   static const dark = AppColors(
-    background: Color(0xFF1E2230),
-    sidebar: Color(0xFF181C27),
-    titleBar: Color(0xFF131720),
-    card: Color(0xFF252A38),
-    cardHover: Color(0xFF2B3141),
-    border: Color(0xFF323849),
-    borderStrong: Color(0xFF454C63),
-    foreground: Color(0xFFF1F5F9),
-    muted: Color(0xFFA7B1C2),
-    subtle: Color(0xFF6B758A),
-    primary: Color(0xFF4DA3FF),
-    onPrimary: Color(0xFF07152B),
-    primarySoft: Color(0x224DA3FF),
-    success: Color(0xFF4ADE80),
-    successSoft: Color(0x1F4ADE80),
-    warning: Color(0xFFFBBF24),
-    warningSoft: Color(0x1FFBBF24),
-    danger: Color(0xFFF87171),
-    dangerSoft: Color(0x1FF87171),
+    background: Color(0xFF161B29),
+    sidebar: Color(0xFF121725),
+    titleBar: Color(0xFF0E121C),
+    card: Color(0xFF1D2333),
+    cardHover: Color(0xFF232A3C),
+    border: Color(0xFF2A3246),
+    borderStrong: Color(0xFF353D53),
+    foreground: Color(0xFFF2EFE8),
+    muted: Color(0xFFA3A9B8),
+    subtle: Color(0xFF6B7385),
+    primary: Color(0xFF2EC8F0),
+    onPrimary: Color(0xFF0B1220),
+    primarySoft: Color(0x222EC8F0),
+    success: Color(0xFF4FD08A),
+    successSoft: Color(0x1F4FD08A),
+    warning: Color(0xFFF2B544),
+    warningSoft: Color(0x1FF2B544),
+    danger: Color(0xFFF2665E),
+    dangerSoft: Color(0x1FF2665E),
     hover: Color(0x0FFFFFFF),
-    selected: Color(0x224DA3FF),
+    selected: Color(0x222EC8F0),
   );
 
   @override

@@ -205,24 +205,24 @@ class AppTheme {
         waitDuration: const Duration(milliseconds: 400),
         decoration: BoxDecoration(
           color: brightness == Brightness.dark
-              ? const Color(0xFFF1F5F9)
-              : const Color(0xFF0F172A),
+              ? const Color(0xFFF2EFE8)
+              : const Color(0xFF161B29),
           borderRadius: AppRadius.smAll,
         ),
         textStyle: text.bodySmall?.copyWith(
           color: brightness == Brightness.dark
-              ? const Color(0xFF0F172A)
+              ? const Color(0xFF161B29)
               : Colors.white,
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: brightness == Brightness.dark
-            ? const Color(0xFFF1F5F9)
-            : const Color(0xFF0F172A),
+            ? const Color(0xFFF2EFE8)
+            : const Color(0xFF161B29),
         contentTextStyle: text.bodyLarge?.copyWith(
           color: brightness == Brightness.dark
-              ? const Color(0xFF0F172A)
+              ? const Color(0xFF161B29)
               : Colors.white,
         ),
         actionTextColor: c.primary,
