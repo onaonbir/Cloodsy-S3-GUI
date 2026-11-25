@@ -1,0 +1,6 @@
+{
+  "identifier": "default",
+  "description": "The setup window: its own commands and events, moving the frameless window.",
+  "windows": ["setup"],
+  "permissions": ["core:default", "core:window:allow-start-dragging", "dialog:default"]
+}

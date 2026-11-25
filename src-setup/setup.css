@@ -1,0 +1,26 @@
+/* The setup window's base: the GUI's design tokens and its bundled fonts
+   (the window must work without internet access). The GUI's component
+   styles (src/styles/base.css) are not loaded; SetupApp.vue has its own. */
+@import '../src/styles/tokens.css';
+
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 400; font-display: block; src: url('../assets/fonts/PlusJakartaSans-Regular.ttf') format('truetype'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 500; font-display: block; src: url('../assets/fonts/PlusJakartaSans-Medium.ttf') format('truetype'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 600; font-display: block; src: url('../assets/fonts/PlusJakartaSans-SemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 700; font-display: block; src: url('../assets/fonts/PlusJakartaSans-Bold.ttf') format('truetype'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 400; font-display: block; src: url('../assets/fonts/JetBrainsMono-Regular.ttf') format('truetype'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 500; font-display: block; src: url('../assets/fonts/JetBrainsMono-Medium.ttf') format('truetype'); }
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #app { margin: 0; height: 100%; }
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--foreground);
+  background: var(--titlebar);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+  cursor: default;
+}
+h1, p { margin: 0; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }

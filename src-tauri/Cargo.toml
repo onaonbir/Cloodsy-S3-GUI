@@ -1,0 +1,47 @@
+[package]
+name = "cloodsy-s3-gui"
+version = "3.0.0"
+description = "Desktop admin for Cloodsy S3 servers"
+authors = ["OnaOnbir"]
+license-file = "../LICENSE"
+repository = "https://github.com/onaonbir/Cloodsy-S3-GUI"
+edition = "2021"
+rust-version = "1.85"
+
+[lib]
+name = "cloodsy_s3_gui_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "cloodsy-s3"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = [] }
+tauri-plugin-dialog = "2.8"
+tauri-plugin-opener = "2.7"
+tauri-plugin-single-instance = "2.5"
+tauri-plugin-window-state = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-updater = "2.14"
+tauri-plugin-process = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "stream"] }
+tokio = { version = "1", features = ["rt", "sync", "time", "fs", "io-util", "macros"] }
+tokio-util = { version = "0.7", features = ["io"] }
+futures-util = "0.3"
+keyring = { version = "3", features = ["windows-native", "apple-native", "sync-secret-service", "crypto-rust"] }
+thiserror = "2"
+url = "2"
+sha2 = "0.10"
+hmac = "0.12"
+hex = "0.4"
+time = { version = "0.3", features = ["formatting", "parsing"] }
+dirs = "6"
+
+[dev-dependencies]
+tempfile = "3"

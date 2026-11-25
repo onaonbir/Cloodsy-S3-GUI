@@ -1,0 +1,111 @@
+@import './tokens.css';
+
+/* Bundled fonts: the UI never depends on fetching fonts at runtime (admin
+   consoles often run on machines without internet access). SIL OFL, licence
+   texts in assets/fonts/. */
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 400; font-display: block; src: url('../../assets/fonts/PlusJakartaSans-Regular.ttf') format('truetype'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 500; font-display: block; src: url('../../assets/fonts/PlusJakartaSans-Medium.ttf') format('truetype'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 600; font-display: block; src: url('../../assets/fonts/PlusJakartaSans-SemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 700; font-display: block; src: url('../../assets/fonts/PlusJakartaSans-Bold.ttf') format('truetype'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 400; font-display: block; src: url('../../assets/fonts/JetBrainsMono-Regular.ttf') format('truetype'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 500; font-display: block; src: url('../../assets/fonts/JetBrainsMono-Medium.ttf') format('truetype'); }
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #app { margin: 0; height: 100%; }
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--foreground);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+  cursor: default;
+}
+h1, h2, h3, h4, p { margin: 0; }
+a { color: var(--primary); text-decoration: none; cursor: pointer; }
+a:hover { text-decoration: underline; }
+svg { flex-shrink: 0; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--subtle); background-clip: padding-box; border: 3px solid transparent; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+
+/* ---- buttons ---- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 34px; padding: 0 14px; border-radius: var(--radius-md);
+  border: 1px solid var(--border); background: var(--card); color: var(--foreground);
+  font: 600 13px var(--font-sans); cursor: pointer; white-space: nowrap;
+  transition: background var(--fast), border-color var(--fast), color var(--fast);
+}
+.btn:hover:not(:disabled) { background: var(--card-hover); border-color: var(--border-strong); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.08); background: var(--primary); }
+.btn.danger { color: var(--danger); }
+.btn.danger.solid { background: var(--danger); border-color: var(--danger); color: #fff; }
+.btn.ghost { background: transparent; border-color: transparent; }
+.btn.ghost:hover:not(:disabled) { background: var(--hover); border-color: transparent; }
+.btn.sm { height: 28px; padding: 0 10px; font-size: 12px; border-radius: var(--radius-sm); }
+.btn.icon { width: 32px; padding: 0; }
+.btn.icon.sm { width: 28px; }
+
+/* ---- inputs ---- */
+.input, .select, textarea.input {
+  width: 100%; height: 36px; padding: 0 12px; border-radius: var(--radius-md);
+  border: 1px solid var(--border); background: var(--card); color: var(--foreground);
+  font: 400 13.5px var(--font-sans); outline: none; user-select: text;
+  transition: border-color var(--fast), box-shadow var(--fast);
+}
+textarea.input { height: auto; padding: 10px 12px; resize: vertical; line-height: 1.45; }
+/* Drop-downs: our own chevron, centred, instead of the engine's arrow (which
+   sits off-centre in WebView2 and differs per platform). */
+select.input, .select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 34px;
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235E6678' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+[data-theme='dark'] select.input, [data-theme='dark'] .select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A3A9B8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+select.input option, .select option { background: var(--card); color: var(--foreground); }
+
+/* WebView2 adds its own reveal button to password fields; ours is the eye. */
+input::-ms-reveal, input::-ms-clear { display: none; }
+.input:focus, .select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.input.invalid { border-color: var(--danger); }
+.input.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.field .hint { font-size: 12px; color: var(--subtle); }
+.field .error { font-size: 12px; color: var(--danger); }
+.check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; }
+.check input { accent-color: var(--primary); width: 15px; height: 15px; margin: 0; }
+
+/* ---- surfaces ---- */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.card.pad { padding: var(--space-lg); }
+.divider { height: 1px; background: var(--border); border: 0; margin: 0; }
+.page { padding: 24px var(--page) 40px; display: flex; flex-direction: column; gap: var(--space-lg); min-height: 100%; }
+.page-header { display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap; }
+.page-header h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.4px; }
+
+/* ---- tables ---- */
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--subtle); padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.table th.sortable { cursor: pointer; }
+.table th.sortable:hover { color: var(--foreground); }
+.table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.table tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover td { background: var(--hover); }
+.table tbody tr.selected td { background: var(--selected); }
+.table td.num, .table th.num { text-align: right; font-variant-numeric: tabular-nums; }

@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src-setup/**/*.ts", "src-setup/**/*.vue", "src/components/BrandMark.vue", "vite.setup.config.ts"]
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Cloodsy S3 GUI Setup",
+  "version": "../../package.json",
+  "identifier": "com.onaonbir.cloodsys3gui.setup",
+  "build": {
+    "beforeDevCommand": "npm run dev:setup",
+    "devUrl": "http://localhost:1441",
+    "frontendDist": "../../dist-setup"
+  },
+  "app": {
+    "windows": [],
+    "security": { "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src ipc: http://ipc.localhost" }
+  },
+  "bundle": {
+    "active": false,
+    "icon": ["../../src-tauri/icons/32x32.png", "../../src-tauri/icons/128x128.png", "../../src-tauri/icons/icon.ico"],
+    "publisher": "OnaOnbir"
+  }
+}

@@ -9,10 +9,10 @@
 
 **A desktop admin console for [Cloodsy S3](https://github.com/onaonbir/Cloodsy-S3) servers.**
 
-Built with Flutter. Connects to one or more Cloodsy S3 servers through the Admin REST API.
+Built with Tauri 2, Rust and Vue 3. Connects to one or more Cloodsy S3 servers through the Admin REST API.
 
 [![Built by OnaOnbir](https://img.shields.io/badge/Built%20by-OnaOnbir-blue?style=flat-square)](https://onaonbir.com)
-[![Flutter](https://img.shields.io/badge/Flutter-3.50-02569B?style=flat-square&logo=flutter&logoColor=white)](https://flutter.dev)
+[![Tauri](https://img.shields.io/badge/Tauri-2-24C8DB?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-green?style=flat-square)]()
 
 [Website](https://onaonbir.com) | [Cloodsy S3 Server](https://github.com/onaonbir/Cloodsy-S3) | [Getting started](#getting-started)
@@ -41,6 +41,7 @@ Built with Flutter. Connects to one or more Cloodsy S3 servers through the Admin
 - **Lifecycle v2 & webhooks v2** — every rule action with enable/edit; webhook edit, test event and delivery history
 - **Everyday comfort** — Ctrl+K command palette, English/Türkçe, notifications when transfers finish, taskbar progress, "all servers" overview, update check
 - **Light, dark and system themes**, bundled fonts (works fully offline), responsive layout down to tablet width
+- **Installs and updates itself** — our own Windows setup (per user, no administrator rights), and signed in-place updates from GitHub releases on Windows, macOS and Linux
 
 > **Server version:** most of the above needs **Cloodsy S3 1.4.0 or newer**.
 > The app reads `features` from `GET /admin/status` and hides anything an
@@ -53,15 +54,22 @@ Prebuilt desktop binaries are attached to every [release](https://github.com/ona
 
 | Platform | File | Install |
 |----------|------|---------|
-| Windows | `cloodsy-s3-gui-*.msix` | Double-click to install (one-time: trust the bundled test certificate) |
-| Windows (portable) | `cloodsy-s3-gui-windows-x64.zip` | Unzip and run `cloodsy-s3.exe` |
-| macOS | `cloodsy-s3-gui-*-macos.dmg` | Open the DMG, drag to Applications |
-| Linux | `cloodsy-s3-gui-*-x86_64.AppImage` | `chmod +x` then run |
-| Linux (portable) | `cloodsy-s3-gui-linux-x64.tar.gz` | Extract and run `cloodsy-s3` |
+| Windows 10/11 | `cloodsy-s3-gui-<version>-windows-x64-setup.exe` | Run it: installs for your user (no administrator), Start menu and optional desktop shortcut, uninstall from *Settings → Apps* |
+| macOS | `cloodsy-s3-gui-<version>-macos-<arch>.dmg` | Open the DMG, drag to Applications |
+| Linux | `cloodsy-s3-gui-<version>-linux-x64.AppImage` | `chmod +x` then run |
+| Linux (Debian/Ubuntu) | `cloodsy-s3-gui-<version>-linux-x64.deb` | `sudo apt install ./cloodsy-s3-gui-…deb` |
 
-### First-launch notes (unsigned builds)
+Installed copies update themselves: **Settings → About → Download and install**
+(the app checks GitHub once per launch). Every update is signed; the app refuses
+one whose signature does not match the key built into it.
 
-- **Windows (SmartScreen):** *More info* → *Run anyway*. For the MSIX, first install the included `.cer` test certificate (right-click → Install Certificate → Local Machine → *Trusted People*).
+Coming from 2.0? The first start imports the servers you had saved (names,
+addresses and usernames); enter each password once more. The 2.0 MSIX can be
+removed from *Settings → Apps*.
+
+### First-launch notes (builds are not code-signed)
+
+- **Windows (SmartScreen):** *More info* → *Run anyway*.
 - **macOS (Gatekeeper):** right-click the app → *Open* → *Open*, or run `xattr -cr "/Applications/Cloodsy S3 GUI.app"` once.
 - **Linux (AppImage):** needs FUSE (`sudo apt install libfuse2`).
 
@@ -89,59 +97,47 @@ admin:
 
 ## Development
 
-Requirements: Flutter **3.50.0**, pinned with [FVM](https://fvm.app) in `.fvmrc`.
+Requirements: Rust (stable), Node 22+, and the [Tauri 2 prerequisites](https://tauri.app/start/prerequisites/)
+for your OS (WebView2 on Windows, Xcode tools on macOS, `libwebkit2gtk-4.1-dev` and friends on Linux).
 
 ```bash
-fvm flutter pub get
-fvm flutter analyze
-fvm flutter test
-fvm flutter run -d windows   # or macos / linux
+npm install
+npm run tauri dev        # the app with hot reload
+npm run typecheck        # vue-tsc
+npm test                 # vitest (pure logic)
+cargo test --workspace   # Rust: API client, sessions, transfers, SigV4, settings, setup
+node tool/i18n-missing.mjs   # every UI string has Turkish
 ```
 
 ### Architecture
 
 ```
-lib/
-├── main.dart                 window setup, font licences
-├── app.dart                  providers, MaterialApp, session gate
-├── core/
-│   ├── api/api_client.dart   Admin API client: JSON calls, streaming upload/download, cancel
-│   ├── storage/              settings file + keychain behind small interfaces (memory fakes for tests)
-│   └── format.dart           bytes, dates, versions, content types
-├── models/                   API DTOs
-├── state/                    ChangeNotifier controllers
-│   ├── session_controller    login, token reuse, silent renewal, revocation recovery
-│   ├── navigation_controller sealed destinations; every screen is reachable from every other
-│   ├── server_controller     status + bucket list (per session)
-│   ├── bucket_controller     one bucket: settings, keys, rules, webhooks (per open bucket)
-│   ├── objects_controller    file browser with pagination and selection (per open bucket)
-│   ├── transfers_controller  upload/download queue (per session)
-│   └── admins_controller
-└── ui/
-    ├── theme/                colour tokens (light/dark), spacing, typography
-    ├── widgets/common.dart   page scaffold, panels, pills, dialogs, confirm/prompt, toasts
-    ├── shell/                title bar, sidebar, server switcher, transfers panel
-    ├── dialogs/
-    └── screens/              welcome, dashboard, buckets, bucket/<tab>, admins, settings
+src-tauri/            the app (Rust): everything that leaves the machine or touches secrets
+  src/api.rs          Admin API client and sessions: token reuse, silent renewal, 401 recovery
+  src/transfers.rs    streamed uploads/downloads, 3 at a time, multipart above 64 MB, resume, cancel
+  src/presign.rs      SigV4 presigning for share links (secrets never leave the machine)
+  src/settings.rs     settings.json (servers, preferences), import of 2.0's settings
+  src/secrets.rs      passwords and tokens in the OS keychain
+  src/desktop.rs      folder walks, preview files, server-path → local-path mapping (WSL included)
+src/                  the window (Vue 3 + TypeScript): no file, shell or network access of its own
+  lib/                typed Admin API, IPC, i18n, formatting, dialogs, menus
+  stores/             session, navigation, servers, preferences, transfers, updates
+  shell/              title bar, sidebar, command palette, transfers panel, welcome, server dialog
+  screens/            dashboard, buckets, bucket/<tab> (files in bucket/files/), admins, server pages, settings
+  i18n/               Turkish strings (English is the key)
+installer/            our Windows setup: pack (payload) + setup (Tauri window), see installer/README.md
+src-setup/            the setup window's page
+tool/                 build and release scripts
 ```
 
-Controllers that belong to a session are created inside `SessionScope` and
-disposed when the session ends, so nothing leaks between servers. Screen-scoped
-controllers (bucket, objects, admins) live as long as their screen.
-
-`material_ui` replaces the deprecated `package:flutter/material.dart`, and
-`window_manager` 0.7 is used through its native API (`WindowManager.instance`).
+The window talks only to the Rust side (Tauri commands); its CSP allows no
+network access. The Rust side keeps one session per server and renews it
+before it expires.
 
 ### Releasing
 
-```bash
-# bump version in pubspec.yaml, commit, then:
-git tag v2.0.0 && git push origin v2.0.0
-```
-
-`.github/workflows/release.yml` runs analyze + tests (`ci.yml`) and then builds
-on Windows, macOS and Linux runners, attaching `.msix`/`.zip`, `.dmg` and
-`.AppImage`/`.tar.gz` to the release. Builds are unsigned.
+Packages are built locally (no CI) and published as a GitHub release with a
+signed `latest.json` for the updater. See [docs/RELEASE.md](docs/RELEASE.md).
 
 ## License
 

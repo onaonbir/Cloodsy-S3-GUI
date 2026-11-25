@@ -1,0 +1,28 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The main window. App commands are registered in src/lib.rs; the page has no file system, shell or HTTP access of its own. The window permissions serve the custom title bar; the dialog permissions let the user pick files and folders (the paths go to the Rust side, which reads them).",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-maximize",
+    "core:window:allow-unmaximize",
+    "core:window:allow-is-maximized",
+    "core:window:allow-close",
+    "core:window:allow-set-focus",
+    "core:window:allow-show",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "dialog:allow-message",
+    "dialog:allow-ask",
+    "dialog:allow-confirm",
+    "opener:allow-open-url",
+    "core:window:allow-set-progress-bar",
+    "notification:default",
+    "updater:default",
+    "process:allow-restart"
+  ]
+}

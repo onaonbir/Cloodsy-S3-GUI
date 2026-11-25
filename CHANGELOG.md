@@ -4,9 +4,46 @@ All notable changes to Cloodsy S3 GUI are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [3.0.0] - 2026-11-25
 
-Nothing yet.
+The app is rebuilt on Tauri 2 (Rust) and Vue 3, with every 2.0 feature kept.
+
+### Added
+
+- **Our own Windows setup**: one exe installs, updates, repairs and
+  uninstalls, per user and without administrator rights; Start menu and
+  optional desktop shortcut; "Also remove my data" on uninstall.
+- **Updates in place**: Settings → About → *Download and install* fetches the
+  new version from the GitHub release, checks its signature against the key
+  built into the app and installs it (Windows, macOS, Linux).
+- **Remove a server** from inside the app (server menu in the sidebar, and
+  Settings → Connection), not only from the start screen.
+- Linux `.deb` package next to the AppImage.
+
+### Changed
+
+- **Smaller**: a native window (WebView2 / WebKit) instead of Flutter; the
+  Windows setup is 7 MB, against 19 MB for 2.0's zip.
+- Network, uploads, downloads and secrets live in the Rust side; the window
+  has no network access of its own.
+- Settings are a plain `settings.json`; passwords and session tokens stay in
+  the system keychain. The first start imports the servers saved by 2.0
+  (passwords are asked once more).
+- Every string is translated (2.0 left some dialog titles and labels in
+  English), relative times included.
+- New Cloodsy logo, ink/cream/turquoise colours from the brand kit.
+
+### Fixed
+
+- Webhook events are sent as the comma-separated list the server expects.
+- Esc closes only the topmost of stacked dialogs.
+- Deleting, downloading or editing the "null" (unversioned) version of an
+  object targets that version only.
+
+### Removed
+
+- The MSIX, the portable zip and the snap; the GitHub Actions workflows
+  (releases are built locally).
 
 ## [2.0.0] - 2026-11-14
 
@@ -89,6 +126,6 @@ the server's `features` list and hides what an older server doesn't support.
 
 Initial release.
 
-[Unreleased]: https://github.com/onaonbir/Cloodsy-S3-GUI/compare/v2.0.0...HEAD
+[3.0.0]: https://github.com/onaonbir/Cloodsy-S3-GUI/compare/v2.0.0...v3.0.0
 [2.0.0]: https://github.com/onaonbir/Cloodsy-S3-GUI/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/onaonbir/Cloodsy-S3-GUI/releases/tag/v1.1.0

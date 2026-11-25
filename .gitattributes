@@ -1,0 +1,2 @@
+# Shell scripts run in WSL and on the Mac: keep LF whatever the checkout does.
+*.sh text eol=lf

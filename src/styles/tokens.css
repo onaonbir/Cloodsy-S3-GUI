@@ -1,0 +1,105 @@
+/* Design tokens: the brand kit's ink, cream and turquoise (2.0's AppColors,
+   radii, spacing and type scale). The theme is set on <html data-theme>. */
+
+:root {
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
+  --page: 28px;
+  --fast: 120ms;
+  --normal: 200ms;
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --folder: #ffc107;
+  --brand-cyan: #2ec8f0;
+  --sidebar-width: 252px;
+  --titlebar-height: 40px;
+}
+
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+  --background: #f2efe8;
+  --sidebar: #ebe7de;
+  --titlebar: #e4e0d6;
+  --card: #fbfaf6;
+  --card-hover: #f6f3ec;
+  --border: #dcd8ce;
+  --border-strong: #c9c4b8;
+  --foreground: #161b29;
+  --muted: #5e6678;
+  --subtle: #8a90a0;
+  --primary: #0a6e90;
+  --on-primary: #ffffff;
+  --primary-soft: rgba(10, 110, 144, 0.08);
+  --success: #12703a;
+  --success-soft: rgba(18, 112, 58, 0.1);
+  --warning: #a15c07;
+  --warning-soft: rgba(161, 92, 7, 0.1);
+  --danger: #c0392b;
+  --danger-soft: rgba(192, 57, 43, 0.08);
+  --hover: rgba(22, 27, 41, 0.04);
+  --selected: rgba(10, 110, 144, 0.08);
+  --shadow: 0 12px 32px rgba(22, 27, 41, 0.14), 0 2px 6px rgba(22, 27, 41, 0.08);
+  --scrim: rgba(22, 27, 41, 0.32);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --background: #161b29;
+  --sidebar: #121725;
+  --titlebar: #0e121c;
+  --card: #1d2333;
+  --card-hover: #232a3c;
+  --border: #2a3246;
+  --border-strong: #353d53;
+  --foreground: #f2efe8;
+  --muted: #a3a9b8;
+  --subtle: #6b7385;
+  --primary: #2ec8f0;
+  --on-primary: #0b1220;
+  --primary-soft: rgba(46, 200, 240, 0.13);
+  --success: #4fd08a;
+  --success-soft: rgba(79, 208, 138, 0.12);
+  --warning: #f2b544;
+  --warning-soft: rgba(242, 181, 68, 0.12);
+  --danger: #f2665e;
+  --danger-soft: rgba(242, 102, 94, 0.12);
+  --hover: rgba(255, 255, 255, 0.06);
+  --selected: rgba(46, 200, 240, 0.13);
+  --shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --scrim: rgba(0, 0, 0, 0.5);
+}
+
+/* Type scale (2.0 app_theme.dart). */
+.t-display { font-size: 30px; font-weight: 700; letter-spacing: -0.6px; }
+.t-headline { font-size: 24px; font-weight: 700; letter-spacing: -0.4px; }
+.t-headline-sm { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+.t-title-lg { font-size: 18px; font-weight: 600; letter-spacing: -0.2px; }
+.t-title { font-size: 15px; font-weight: 600; letter-spacing: -0.1px; }
+.t-title-sm { font-size: 13.5px; font-weight: 600; }
+.t-body-lg { font-size: 14px; line-height: 1.45; }
+.t-body { font-size: 13px; line-height: 1.45; color: var(--muted); }
+.t-body-sm { font-size: 12px; line-height: 1.4; color: var(--subtle); }
+.t-label-lg { font-size: 13px; font-weight: 600; }
+.t-label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.t-label-sm { font-size: 11px; font-weight: 600; letter-spacing: 0.6px; color: var(--subtle); text-transform: uppercase; }
+.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.muted { color: var(--muted); }
+.subtle { color: var(--subtle); }
+.danger-text { color: var(--danger); }
+.success-text { color: var(--success); }
+.warning-text { color: var(--warning); }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.selectable { user-select: text; }
+.row { display: flex; align-items: center; gap: var(--space-sm); }
+.col { display: flex; flex-direction: column; gap: var(--space-sm); }
+.grow { flex: 1; min-width: 0; }
+.spacer { flex: 1; }

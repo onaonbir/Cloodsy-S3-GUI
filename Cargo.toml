@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+members = ["src-tauri", "installer/pack", "installer/setup"]
+
+# Shared by the Windows setup's crates (installer/README.md). The GUI's own
+# version is in package.json (src-tauri/tauri.conf.json reads it from there).
+[workspace.package]
+edition = "2021"
+license-file = "LICENSE"
+repository = "https://github.com/onaonbir/Cloodsy-S3-GUI"
+publish = false
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

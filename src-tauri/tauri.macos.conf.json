@@ -1,0 +1,20 @@
+{
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Cloodsy S3",
+        "width": 1320,
+        "height": 840,
+        "minWidth": 960,
+        "minHeight": 620,
+        "center": true,
+        "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": { "x": 14, "y": 20 },
+        "dragDropEnabled": true
+      }
+    ]
+  }
+}
