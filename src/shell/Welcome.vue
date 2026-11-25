@@ -11,7 +11,16 @@ import { connect, connecting, sessionError } from '@/stores/session';
 import { openServerDialog } from './serverDialog';
 import { confirm } from '@/lib/dialogs';
 import { ipc, type Server } from '@/lib/ipc';
-import { t } from '@/lib/i18n';
+import { locale, t, type Locale } from '@/lib/i18n';
+import { setLanguage } from '@/stores/prefs';
+import { toastError } from '@/stores/toasts';
+
+// The language can be chosen before any server is added (Settings needs a
+// session); the choice is the same preference Settings shows.
+const languages: { value: Locale; label: string }[] = [
+  { value: 'en', label: 'English' },
+  { value: 'tr', label: 'Türkçe' },
+];
 
 const probes = reactive<Record<string, { ms?: number; down?: boolean }>>({});
 
@@ -81,11 +90,23 @@ async function remove(s: Server) {
         <button class="btn ghost add" @click="add"><Plus :size="15" />{{ t('Add another server') }}</button>
       </div>
     </div>
+
+    <div class="lang" role="radiogroup" :aria-label="t('Language')">
+      <button
+        v-for="l in languages"
+        :key="l.value"
+        type="button"
+        role="radio"
+        :aria-checked="locale === l.value"
+        :class="{ on: locale === l.value }"
+        @click="setLanguage(l.value).catch(toastError)"
+      >{{ l.label }}</button>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.welcome { flex: 1; display: grid; place-items: center; overflow-y: auto; padding: 32px; }
+.welcome { position: relative; flex: 1; display: grid; place-items: center; overflow-y: auto; padding: 32px; }
 .box { width: 480px; max-width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.4px; margin-top: 6px; }
 .err { width: 100%; text-align: left; margin-top: 8px; }
@@ -99,6 +120,10 @@ h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.4px; margin-top: 6px;
 .acts { display: flex; gap: 2px; opacity: 0; transition: opacity var(--fast); }
 .srv:hover .acts { opacity: 1; }
 .add { align-self: center; }
+.lang { position: absolute; top: 14px; right: 16px; display: flex; gap: 2px; padding: 3px; border-radius: var(--radius-md); background: var(--hover); }
+.lang button { height: 26px; padding: 0 12px; border: 0; border-radius: calc(var(--radius-md) - 2px); background: transparent; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.lang button:hover { color: var(--foreground); }
+.lang button.on { background: var(--card); color: var(--foreground); box-shadow: 0 1px 2px rgb(0 0 0 / 0.12); }
 .spin { animation: spin 0.9s linear infinite; color: var(--primary); }
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

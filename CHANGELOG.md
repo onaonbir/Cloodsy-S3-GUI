@@ -4,6 +4,21 @@ All notable changes to Cloodsy S3 GUI are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [3.0.1] - 2026-11-25
+
+### Added
+
+- **Language picker before signing in**: English or Türkçe on the start
+  screen (Settings needs a connected server).
+- **Language picker in the Windows setup** (TR / EN in its title bar). The
+  language picked there becomes the app's; an update opens in the app's
+  current language.
+
+### Fixed
+
+- The setup's welcome icons were grey on the coloured tile; both now use the
+  same turquoise badge.
+
 ## [3.0.0] - 2026-11-25
 
 The app is rebuilt on Tauri 2 (Rust) and Vue 3, with every 2.0 feature kept.
@@ -126,6 +141,7 @@ the server's `features` list and hides what an older server doesn't support.
 
 Initial release.
 
+[3.0.1]: https://github.com/onaonbir/Cloodsy-S3-GUI/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/onaonbir/Cloodsy-S3-GUI/compare/v2.0.0...v3.0.0
 [2.0.0]: https://github.com/onaonbir/Cloodsy-S3-GUI/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/onaonbir/Cloodsy-S3-GUI/releases/tag/v1.1.0

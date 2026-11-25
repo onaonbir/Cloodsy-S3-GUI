@@ -1,11 +1,14 @@
-// The setup window's text (English and Turkish, by the Windows language). It
-// lives here, not in src/i18n: only the Windows setup needs it.
+// The setup window's text (English and Turkish). It lives here, not in
+// src/i18n: only the Windows setup needs it.
+import { ref } from 'vue';
+
 const en = {
   'title.setup': 'Cloodsy S3 GUI Setup',
   'title.uninstall': 'Uninstall Cloodsy S3 GUI',
   'trial': 'Trial run: nothing outside the trial folder changes',
   'minimize': 'Minimize',
   'close': 'Close',
+  'language': 'Language',
   'flow.welcome': 'Welcome',
   'flow.options': 'Options',
   'flow.install': 'Install',
@@ -99,6 +102,7 @@ const tr: Record<Key, string> = {
   'trial': 'Deneme kurulumu: deneme klasörü dışında hiçbir şey değişmez',
   'minimize': 'Küçült',
   'close': 'Kapat',
+  'language': 'Dil',
   'flow.welcome': 'Karşılama',
   'flow.options': 'Seçenekler',
   'flow.install': 'Kurulum',
@@ -184,13 +188,24 @@ const tr: Record<Key, string> = {
   'terms': "Devam ederek Cloodsy S3 GUI Topluluk Lisansı'nı kabul edersiniz.",
 };
 
-// WebView2 reports the Windows display language.
-const turkish = navigator.language.toLowerCase().startsWith('tr');
-document.documentElement.lang = turkish ? 'tr' : 'en';
+export type Lang = 'en' | 'tr';
+
+/** The window's language: the installed app's, else Windows' (WebView2
+ *  reports the display language); the picker in the title bar changes it. */
+export const lang = ref<Lang>(navigator.language.toLowerCase().startsWith('tr') ? 'tr' : 'en');
+/** Set once the language is picked by hand: the app then gets it too. */
+export const langPicked = ref(false);
+
+export function setLang(l: Lang, picked = true) {
+  lang.value = l;
+  document.documentElement.lang = l;
+  if (picked) langPicked.value = true;
+}
+setLang(lang.value, false);
 
 /** The text for `key`, with `{name}` placeholders filled from `params`. */
 export function s(key: Key, params: Record<string, string | number> = {}): string {
-  const text: string = (turkish ? tr : en)[key] ?? en[key];
+  const text: string = (lang.value === 'tr' ? tr : en)[key] ?? en[key];
   return text.replace(/\{(\w+)\}/g, (m, p) => (p in params ? String(params[p]) : m));
 }
 

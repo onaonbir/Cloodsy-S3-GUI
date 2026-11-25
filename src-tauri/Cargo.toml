@@ -1,6 +1,6 @@
 [package]
 name = "cloodsy-s3-gui"
-version = "3.0.0"
+version = "3.0.1"
 description = "Desktop admin for Cloodsy S3 servers"
 authors = ["OnaOnbir"]
 license-file = "../LICENSE"

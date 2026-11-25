@@ -7,7 +7,12 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Check, Database, Minus, Server, TriangleAlert, X } from 'lucide-vue-next';
 import BrandMark from '@/components/BrandMark.vue';
 import { bridge, type Done, type Info, type Step, type StepId } from './bridge';
-import { errorText, s } from './strings';
+import { errorText, lang, langPicked, s, setLang, type Lang } from './strings';
+
+const languages: { value: Lang; label: string }[] = [
+  { value: 'tr', label: 'TR' },
+  { value: 'en', label: 'EN' },
+];
 
 type Scene = 'welcome' | 'options' | 'progress' | 'done' | 'error';
 const info = ref<Info | null>(null);
@@ -55,7 +60,7 @@ function start() {
   result.value = null;
   scene.value = 'progress';
   if (uninstalling.value) bridge.uninstall(wipe.value);
-  else bridge.install(info.value?.dir_locked ? null : dir.value, desktop.value);
+  else bridge.install(info.value?.dir_locked ? null : dir.value, desktop.value, langPicked.value ? lang.value : null);
 }
 function next() {
   if (scene.value === 'welcome' && !uninstalling.value && !updating.value) scene.value = 'options';
@@ -120,6 +125,7 @@ let unStep: (() => void) | undefined;
 let unDone: (() => void) | undefined;
 onMounted(async () => {
   info.value = await bridge.info();
+  if (info.value.language === 'en' || info.value.language === 'tr') setLang(info.value.language, false);
   dir.value = info.value.dir;
   desktop.value = info.value.desktop;
   unStep = await bridge.onStep((st) => (steps.value = { ...steps.value, [st.id]: st }));
@@ -145,6 +151,18 @@ onBeforeUnmount(() => {
     <header class="bar" data-tauri-drag-region>
       <span class="bar-logo"><BrandMark :size="18" /></span>
       <span class="bar-title" data-tauri-drag-region>{{ s(uninstalling ? 'title.uninstall' : 'title.setup') }}</span>
+      <div class="lang" role="radiogroup" :aria-label="s('language')">
+        <button
+          v-for="l in languages"
+          :key="l.value"
+          type="button"
+          role="radio"
+          :aria-checked="lang === l.value"
+          :class="{ on: lang === l.value }"
+          :disabled="busy"
+          @click="setLang(l.value)"
+        >{{ l.label }}</button>
+      </div>
       <button type="button" class="bar-btn" :aria-label="s('minimize')" @click="bridge.minimize()"><Minus :size="16" /></button>
       <button type="button" class="bar-btn bar-close" :aria-label="s('close')" :disabled="busy" @click="bridge.close()"><X :size="16" /></button>
     </header>
@@ -173,7 +191,7 @@ onBeforeUnmount(() => {
                 <div><b>{{ s('welcome.app') }}</b><span>{{ s('welcome.app_d') }}</span></div>
               </div>
               <div class="tile">
-                <span class="tile-icon soft"><Server :size="18" /></span>
+                <span class="tile-icon"><Server :size="18" /></span>
                 <div><b>{{ s('welcome.servers') }}</b><span>{{ s('welcome.servers_d') }}</span></div>
               </div>
             </div>
@@ -309,6 +327,38 @@ onBeforeUnmount(() => {
   opacity: 0.3;
   pointer-events: none;
 }
+.lang {
+  display: flex;
+  gap: 2px;
+  margin-right: 6px;
+  padding: 2px;
+  border-radius: 7px;
+  background: var(--hover);
+}
+.lang button {
+  height: 22px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.lang button:hover {
+  color: var(--foreground);
+}
+.lang button.on {
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+}
+.lang button:disabled {
+  pointer-events: none;
+}
 .card {
   display: flex;
   flex-direction: column;
@@ -423,7 +473,8 @@ h1 {
   font-size: 13px;
   font-weight: 700;
 }
-.tile span,
+/* Only the text: `.tile span` would also reach .tile-icon and grey its icon. */
+.tile > div > span,
 .choice-text span {
   font-size: 12px;
   color: var(--muted);
@@ -435,10 +486,6 @@ h1 {
   height: 34px;
   flex-shrink: 0;
   border-radius: 9px;
-  background: var(--primary);
-  color: var(--on-primary);
-}
-.tile-icon.soft {
   background: var(--primary-soft);
   color: var(--primary);
 }

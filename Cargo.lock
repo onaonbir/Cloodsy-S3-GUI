@@ -556,7 +556,7 @@ dependencies = [
 
 [[package]]
 name = "cloodsy-s3-gui"
-version = "3.0.0"
+version = "3.0.1"
 dependencies = [
  "dirs 6.0.0",
  "futures-util",

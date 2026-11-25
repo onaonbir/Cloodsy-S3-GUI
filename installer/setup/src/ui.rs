@@ -46,6 +46,9 @@ struct Info {
     /// A trial run (`/SANDBOX`): the window says so.
     trial: bool,
     log: String,
+    /// The installed app's language, when it has chosen one: the window
+    /// starts in it.
+    language: Option<String>,
 }
 
 #[derive(Serialize, Clone)]
@@ -72,6 +75,7 @@ fn info(shared: State<Shared>) -> Info {
         auto_start: c.args.update && c.mode != Mode::Uninstall,
         trial: c.args.sandbox.is_some(),
         log: system::log_path().display().to_string(),
+        language: c.paths.data.first().and_then(|d| install::app_language(d)),
     }
 }
 
@@ -94,7 +98,7 @@ fn finish(app: &tauri::AppHandle, result: Result<(), install::Failure>) {
 
 /// Installs (or updates) on a worker thread.
 #[tauri::command]
-fn start_install(app: tauri::AppHandle, shared: State<Shared>, dir: Option<String>, desktop: bool) -> Result<(), String> {
+fn start_install(app: tauri::AppHandle, shared: State<Shared>, dir: Option<String>, desktop: bool, language: Option<String>) -> Result<(), String> {
     {
         let mut busy = shared.busy.lock().unwrap();
         if *busy {
@@ -117,6 +121,12 @@ fn start_install(app: tauri::AppHandle, shared: State<Shared>, dir: Option<Strin
             Some(p) => install::install(p, stub, paths, Options { desktop }, &*sys, &mut |s| emit_step(&app, s)),
             None => Err(install::Failure { step: install::StepId::Prepare, message: "payload".into(), detail: "no payload".into() }),
         };
+        // The language picked in this window becomes the app's.
+        if let (Ok(()), Some(lang), Some(data)) = (&result, language.as_deref(), paths.data.first()) {
+            if let Err(e) = install::set_app_language(data, lang) {
+                crate::log(&format!("language not saved: {e}"));
+            }
+        }
         drop(c);
         finish(&app, result);
     });

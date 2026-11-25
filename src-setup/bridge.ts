@@ -18,6 +18,8 @@ export interface Info {
   auto_start: boolean;
   trial: boolean;
   log: string;
+  /** The installed app's language, when it has chosen one. */
+  language: 'en' | 'tr' | null;
 }
 export interface Step {
   id: StepId;
@@ -49,6 +51,7 @@ const mock = {
       auto_start: q.has('auto'),
       trial: q.has('trial'),
       log: 'C:\\Users\\Deniz\\AppData\\Local\\Temp\\cloodsy-s3-gui-setup.log',
+      language: (q.get('lang') as 'en' | 'tr' | null) ?? null,
     };
   },
   onStep: null as ((s: Step) => void) | null,
@@ -75,8 +78,8 @@ const mock = {
 
 export const bridge = {
   info: () => (inTauri ? invoke<Info>('info') : Promise.resolve(mock.info())),
-  install: (dir: string | null, desktop: boolean) =>
-    inTauri ? invoke<void>('start_install', { dir, desktop }) : Promise.resolve(mock.run(['prepare', 'files', 'register'])),
+  install: (dir: string | null, desktop: boolean, language: 'en' | 'tr' | null) =>
+    inTauri ? invoke<void>('start_install', { dir, desktop, language }) : Promise.resolve(mock.run(['prepare', 'files', 'register'])),
   uninstall: (wipe: boolean) => (inTauri ? invoke<void>('start_uninstall', { wipe }) : Promise.resolve(mock.run(['close', 'remove', 'clean']))),
   pickDir: (current: string, title: string) => (inTauri ? invoke<string | null>('pick_dir', { current, title }) : Promise.resolve(null)),
   launch: () => (inTauri ? invoke<void>('launch') : Promise.resolve()),

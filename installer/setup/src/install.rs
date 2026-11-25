@@ -185,6 +185,33 @@ fn dir_size_kb(dir: &Path) -> u64 {
     walk(dir) / 1024
 }
 
+/// The app's language in its settings (`prefs.locale` in settings.json in its
+/// data folder), when it has chosen one.
+pub fn app_language(data_dir: &Path) -> Option<String> {
+    let v: serde_json::Value = serde_json::from_slice(&std::fs::read(data_dir.join("settings.json")).ok()?).ok()?;
+    v.get("prefs")?.get("locale")?.as_str().filter(|l| matches!(*l, "en" | "tr")).map(str::to_owned)
+}
+
+/// Sets the app's language (`en` or `tr`) to the one picked in the setup,
+/// keeping everything else in its settings.
+pub fn set_app_language(data_dir: &Path, lang: &str) -> std::io::Result<()> {
+    if !matches!(lang, "en" | "tr") {
+        return Ok(());
+    }
+    let path = data_dir.join("settings.json");
+    let mut v: serde_json::Value = std::fs::read(&path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
+    if !v.is_object() {
+        v = serde_json::json!({});
+    }
+    let prefs = v.as_object_mut().unwrap().entry("prefs").or_insert_with(|| serde_json::json!({}));
+    if !prefs.is_object() {
+        *prefs = serde_json::json!({});
+    }
+    prefs.as_object_mut().unwrap().insert("locale".into(), lang.into());
+    std::fs::create_dir_all(data_dir)?;
+    std::fs::write(&path, serde_json::to_vec_pretty(&v)?)
+}
+
 /// Installs or updates from `payload` into `paths.install`. `stub` is the
 /// setup exe without its payload: it becomes the uninstaller.
 pub fn install(payload: &mut Payload, stub: &[u8], paths: &Paths, opts: Options, sys: &dyn System, emit: Emit) -> Result<(), Failure> {
@@ -300,6 +327,28 @@ pub fn uninstall(paths: &Paths, wipe: bool, sys: &dyn System, emit: Emit) -> Res
 mod tests {
     use super::*;
     use std::cell::RefCell;
+
+    #[test]
+    fn app_language_is_set_and_the_rest_kept() {
+        let dir = std::env::temp_dir().join(format!("cloodsy-s3-gui-setup-lang-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        // No settings yet: the file is made.
+        assert_eq!(app_language(&dir), None);
+        set_app_language(&dir, "tr").unwrap();
+        assert_eq!(app_language(&dir).as_deref(), Some("tr"));
+        // Existing settings: servers and other preferences stay.
+        std::fs::write(dir.join("settings.json"), r#"{"servers":[{"id":"a"}],"prefs":{"theme_mode":"dark","locale":"tr"},"imported_v2":true}"#).unwrap();
+        set_app_language(&dir, "en").unwrap();
+        let v: serde_json::Value = serde_json::from_slice(&std::fs::read(dir.join("settings.json")).unwrap()).unwrap();
+        assert_eq!(v["servers"][0]["id"], "a");
+        assert_eq!(v["prefs"]["theme_mode"], "dark");
+        assert_eq!(v["prefs"]["locale"], "en");
+        assert_eq!(v["imported_v2"], true);
+        // Anything else is ignored.
+        set_app_language(&dir, "de").unwrap();
+        assert_eq!(app_language(&dir).as_deref(), Some("en"));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
 
     #[derive(Default)]
     struct Fake {
